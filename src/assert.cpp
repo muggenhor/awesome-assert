@@ -67,6 +67,22 @@ namespace
 }
 
 namespace detail {
+  static std::ostream& operator<<(std::ostream& os, const bool_expression& expr)
+  {
+    if (expr.begin() == expr.end())
+      return os << TColor::Cyan << true;
+
+    bool is_operator = false;
+    for (bool_expression::const_iterator token = expr.begin(); token != expr.end(); ++token)
+    {
+      if (token != expr.begin())
+        os << os.widen(' ');
+      os << (is_operator ? TColor::Yellow : TColor::Cyan) << *token;
+      is_operator = !is_operator;
+    }
+    return os;
+  }
+
   std::ostream& operator<<(std::ostream& os, const compare_eq&) { return os << "=="; }
   std::ostream& operator<<(std::ostream& os, const compare_ne&) { return os << "!="; }
   std::ostream& operator<<(std::ostream& os, const compare_lt&) { return os << "<" ; }
@@ -99,22 +115,6 @@ namespace detail {
   bool_expression::const_iterator bool_expression::end() const
   {
     return &fail_expression[token_count];
-  }
-
-  static std::ostream& operator<<(std::ostream& os, const bool_expression& expr)
-  {
-    if (expr.begin() == expr.end())
-      return os << TColor::Cyan << true;
-
-    bool is_operator = false;
-    for (bool_expression::const_iterator token = expr.begin(); token != expr.end(); ++token)
-    {
-      if (token != expr.begin())
-        os << os.widen(' ');
-      os << (is_operator ? TColor::Yellow : TColor::Cyan) << *token;
-      is_operator = !is_operator;
-    }
-    return os;
   }
 }
 

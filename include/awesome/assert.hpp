@@ -209,10 +209,16 @@ namespace AwesomeAssert
   void assert_failed(const char* file, int line, const char* function, const char* expr_str, detail::bool_expression expr) AWESOME_NOEXCEPT;
 }
 
+#if defined(__GNUC__)
+# define AWESOME_UNLIKELY(x) __builtin_expect(x, 0)
+#else
+# define AWESOME_UNLIKELY(x) x
+#endif
+
 #define AWESOME_ASSERT(expr) \
   do { \
     ::AwesomeAssert::detail::bool_expression evalExpr = (::AwesomeAssert::detail::expression_decomposer() << expr); \
-    if (!evalExpr) \
+    if (AWESOME_UNLIKELY(!evalExpr)) \
     { \
       ::AwesomeAssert::assert_failed(__FILE__, __LINE__, __FUNCTION__, #expr, evalExpr); \
     } \
