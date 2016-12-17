@@ -21,7 +21,7 @@
 #ifndef __INCLUDED_AWESOME_ASSERT_HPP__
 #define __INCLUDED_AWESOME_ASSERT_HPP__
 
-#include <ostream>
+#include <iosfwd>
 
 #if __cplusplus >= 201103L
   #define AWESOME_NOEXCEPT noexcept
@@ -72,6 +72,28 @@ namespace AwesomeAssert
   private:
     T val;
   };
+
+  // Reduce potential for inlining
+  extern template struct string_maker<bool>;
+  extern template struct string_maker<short>;
+  extern template struct string_maker<unsigned short>;
+  extern template struct string_maker<int>;
+  extern template struct string_maker<unsigned int>;
+  extern template struct string_maker<long>;
+  extern template struct string_maker<unsigned long>;
+  extern template struct string_maker<long long>;
+  extern template struct string_maker<unsigned long long>;
+  extern template struct string_maker<float>;
+  extern template struct string_maker<double>;
+  extern template struct string_maker<long double>;
+  extern template struct string_maker<void*>;
+  extern template struct string_maker<const void*>;
+  extern template struct string_maker<char>;
+  extern template struct string_maker<signed char>;
+  extern template struct string_maker<unsigned char>;
+  extern template struct string_maker<const char*>;
+  extern template struct string_maker<const signed char*>;
+  extern template struct string_maker<const unsigned char*>;
 
   namespace detail
   {

@@ -30,6 +30,27 @@ namespace AwesomeAssert {
 
 stringifier::~stringifier() {}
 
+template struct string_maker<bool>;
+template struct string_maker<short>;
+template struct string_maker<unsigned short>;
+template struct string_maker<int>;
+template struct string_maker<unsigned int>;
+template struct string_maker<long>;
+template struct string_maker<unsigned long>;
+template struct string_maker<long long>;
+template struct string_maker<unsigned long long>;
+template struct string_maker<float>;
+template struct string_maker<double>;
+template struct string_maker<long double>;
+template struct string_maker<void*>;
+template struct string_maker<const void*>;
+template struct string_maker<char>;
+template struct string_maker<signed char>;
+template struct string_maker<unsigned char>;
+template struct string_maker<const char*>;
+template struct string_maker<const signed char*>;
+template struct string_maker<const unsigned char*>;
+
 std::ostream& string_maker<detail::compare_eq>::convert(std::ostream& os) const { return os << "=="; };
 std::ostream& string_maker<detail::compare_ne>::convert(std::ostream& os) const { return os << "!="; };
 std::ostream& string_maker<detail::compare_lt>::convert(std::ostream& os) const { return os << "<" ; };
