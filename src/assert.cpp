@@ -28,6 +28,15 @@
 
 namespace AwesomeAssert {
 
+stringifier::~stringifier() {}
+
+std::ostream& string_maker<detail::compare_eq>::convert(std::ostream& os) const { return os << "=="; };
+std::ostream& string_maker<detail::compare_ne>::convert(std::ostream& os) const { return os << "!="; };
+std::ostream& string_maker<detail::compare_lt>::convert(std::ostream& os) const { return os << "<" ; };
+std::ostream& string_maker<detail::compare_le>::convert(std::ostream& os) const { return os << "<="; };
+std::ostream& string_maker<detail::compare_gt>::convert(std::ostream& os) const { return os << ">" ; };
+std::ostream& string_maker<detail::compare_ge>::convert(std::ostream& os) const { return os << ">="; };
+
 namespace
 {
   struct TColor
@@ -66,6 +75,11 @@ namespace
   }
 }
 
+static std::ostream& operator<<(std::ostream& os, const stringifier& str)
+{
+  return str.convert(os);
+}
+
 namespace detail {
   static std::ostream& operator<<(std::ostream& os, const bool_expression& expr)
   {
@@ -77,18 +91,11 @@ namespace detail {
     {
       if (token != expr.begin())
         os << os.widen(' ');
-      os << (is_operator ? TColor::Yellow : TColor::Cyan) << *token;
+      os << (is_operator ? TColor::Yellow : TColor::Cyan) << **token;
       is_operator = !is_operator;
     }
     return os;
   }
-
-  std::ostream& operator<<(std::ostream& os, const compare_eq&) { return os << "=="; }
-  std::ostream& operator<<(std::ostream& os, const compare_ne&) { return os << "!="; }
-  std::ostream& operator<<(std::ostream& os, const compare_lt&) { return os << "<" ; }
-  std::ostream& operator<<(std::ostream& os, const compare_le&) { return os << "<="; }
-  std::ostream& operator<<(std::ostream& os, const compare_gt&) { return os << ">" ; }
-  std::ostream& operator<<(std::ostream& os, const compare_ge&) { return os << ">="; }
 
   bool_expression::~bool_expression()
   {
@@ -100,7 +107,7 @@ namespace detail {
     while (token_count)
     {
       --token_count;
-      delete [] fail_expression[token_count];
+      delete fail_expression[token_count];
       fail_expression[token_count] = NULL;
     }
     delete [] fail_expression;

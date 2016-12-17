@@ -21,14 +21,14 @@
 #ifndef __INCLUDED_AWESOME_ASSERT_HPP__
 #define __INCLUDED_AWESOME_ASSERT_HPP__
 
-#include <cstring>
 #include <ostream>
-#include <sstream>
 
 #if __cplusplus >= 201103L
   #define AWESOME_NOEXCEPT noexcept
+  #define AWESOME_OVERRIDE override
 #else
   #define AWESOME_NOEXCEPT throw()
+  #define AWESOME_OVERRIDE
 #endif
 
 #if   defined(_MSC_VER)
@@ -46,27 +46,31 @@
 
 namespace AwesomeAssert
 {
+  struct stringifier
+  {
+    virtual ~stringifier();
+    virtual std::ostream& convert(std::ostream& os) const = 0;
+  };
+
   /**
    * \brief String converter helper template class.
    *
    * Specialize this to use an alternate string conversion if desired.
    */
   template <typename T>
-  struct string_maker
+  struct string_maker : stringifier
   {
-    static char* convert(const T& val)
+    string_maker(T val_)
+      : val(val_)
+    {}
+
+    virtual std::ostream& convert(std::ostream& os) const AWESOME_OVERRIDE
     {
-      using namespace std;
-
-      ostringstream os;
-      os << val;
-      string const str(os.str());
-      char* const buf = new char[str.size() + 1];
-      memcpy(buf, str.data(), str.size());
-      buf[str.size()] = '\0';
-
-      return buf;
+      return os << val;
     }
+
+  private:
+    T val;
   };
 
   namespace detail
@@ -80,24 +84,27 @@ namespace AwesomeAssert
     struct compare_le { template <class TL, class TR> bool operator()(const TL& lhs, const TR& rhs) const { return lhs <= rhs; } };
     struct compare_gt { template <class TL, class TR> bool operator()(const TL& lhs, const TR& rhs) const { return lhs >  rhs; } };
     struct compare_ge { template <class TL, class TR> bool operator()(const TL& lhs, const TR& rhs) const { return lhs >= rhs; } };
+  }
 
-    std::ostream& operator<<(std::ostream& os, const compare_eq&);
-    std::ostream& operator<<(std::ostream& os, const compare_ne&);
-    std::ostream& operator<<(std::ostream& os, const compare_lt&);
-    std::ostream& operator<<(std::ostream& os, const compare_le&);
-    std::ostream& operator<<(std::ostream& os, const compare_gt&);
-    std::ostream& operator<<(std::ostream& os, const compare_ge&);
+  template <> struct string_maker<detail::compare_eq> : stringifier { virtual std::ostream& convert(std::ostream& os) const AWESOME_OVERRIDE; };
+  template <> struct string_maker<detail::compare_ne> : stringifier { virtual std::ostream& convert(std::ostream& os) const AWESOME_OVERRIDE; };
+  template <> struct string_maker<detail::compare_lt> : stringifier { virtual std::ostream& convert(std::ostream& os) const AWESOME_OVERRIDE; };
+  template <> struct string_maker<detail::compare_le> : stringifier { virtual std::ostream& convert(std::ostream& os) const AWESOME_OVERRIDE; };
+  template <> struct string_maker<detail::compare_gt> : stringifier { virtual std::ostream& convert(std::ostream& os) const AWESOME_OVERRIDE; };
+  template <> struct string_maker<detail::compare_ge> : stringifier { virtual std::ostream& convert(std::ostream& os) const AWESOME_OVERRIDE; };
 
+  namespace detail
+  {
     struct bool_expression
     {
     private:
       template <typename T>
-      static char** create_expression_list(const T& val)
+      static stringifier** create_expression_list(const T& val)
       {
-        char** const expr = new char*[1];
+        stringifier** const expr = new stringifier*[1];
         try
         {
-          expr[0] = string_maker<T>::convert(val);
+          expr[0] = new string_maker<T>(val);
           return expr;
         }
         catch (...)
@@ -108,29 +115,29 @@ namespace AwesomeAssert
       }
 
       template <typename TL, typename TO, typename TR>
-      static char** create_expression_list(const TL& lhs, const TO& op, const TR& rhs)
+      static stringifier** create_expression_list(const TL& lhs, const TO&, const TR& rhs)
       {
-        char** const expr = new char*[3];
+        stringifier** const expr = new stringifier*[3];
         expr[0] = expr[1] = expr[2] = NULL;
         try
         {
-          expr[0] = string_maker<TL>::convert(lhs);
-          expr[1] = string_maker<TO>::convert(op);
-          expr[2] = string_maker<TR>::convert(rhs);
+          expr[0] = new string_maker<TL>(lhs);
+          expr[1] = new string_maker<TO>();
+          expr[2] = new string_maker<TR>(rhs);
           return expr;
         }
         catch (...)
         {
-          delete [] expr[2];
-          delete [] expr[1];
-          delete [] expr[0];
+          delete expr[2];
+          delete expr[1];
+          delete expr[0];
           delete [] expr;
           throw;
         }
       }
 
     public:
-      typedef char const* const* const_iterator;
+      typedef stringifier const* const* const_iterator;
       typedef const_iterator iterator;
 
       template <typename T>
@@ -163,7 +170,8 @@ namespace AwesomeAssert
       }
 
     private:
-      char** fail_expression;
+      //! Storing string convertors instead of strings to prevent inlining of conversion code.
+      stringifier** fail_expression;
       signed char token_count;
     };
 
