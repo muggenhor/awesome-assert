@@ -22,16 +22,59 @@
 #include <cstdlib>
 #include <iostream>
 
+#ifndef WIN32
+  #include <unistd.h>
+#endif
+
 namespace AwesomeAssert {
+
+namespace
+{
+  struct TColor
+  {
+    enum TCode
+    {
+      None,
+      Red,
+      Cyan,
+      Grey,
+      Bright,
+    };
+  };
+
+  std::ostream& operator<<(std::ostream& os, TColor::TCode color)
+  {
+#if _XOPEN_VERSION >= 700 || _POSIX_VERSION >= 200112L
+    if ((os.rdbuf() == std::cout.rdbuf() && isatty(STDOUT_FILENO))
+     || (os.rdbuf() == std::cerr.rdbuf() && isatty(STDERR_FILENO)))
+    {
+      switch (color)
+      {
+          case TColor::Red:         return os << "\033[22;31m";
+          case TColor::Cyan:        return os << "\033[22;36m";
+          case TColor::Grey:        return os << "\033[1;30m";
+          case TColor::Bright:      return os << "\033[1;39m";
+          case TColor::None:
+          default:                  return os << "\033[22;39m";
+      }
+    }
+#endif
+
+    return os;
+  }
+}
 
 void assert_failed(const char* file, int line, const char* function, const char* expr_str) AWESOME_NOEXCEPT
 {
   using namespace std;
 
   cerr << boolalpha
-    << file << ":" << line << ": " << function << ": Assertion `"
-    << expr_str
-    << "' failed."
+    << TColor::Bright << file << ":" << line << ": " << function << ": "
+    << TColor::Grey   << "Assertion `"
+    << TColor::Cyan   << expr_str
+    << TColor::None   << "' "
+    << TColor::Red    << "failed"
+    << TColor::None   << "."
     << endl // Using 'endl' instead of "\n" because we need its flush.
     ;
 
