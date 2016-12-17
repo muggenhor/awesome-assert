@@ -37,6 +37,7 @@ namespace
       None,
       Red,
       Cyan,
+      Yellow,
       Grey,
       Bright,
     };
@@ -52,6 +53,7 @@ namespace
       {
           case TColor::Red:         return os << "\033[22;31m";
           case TColor::Cyan:        return os << "\033[22;36m";
+          case TColor::Yellow:      return os << "\033[22;33m";
           case TColor::Grey:        return os << "\033[1;30m";
           case TColor::Bright:      return os << "\033[1;39m";
           case TColor::None:
@@ -64,19 +66,78 @@ namespace
   }
 }
 
-void assert_failed(const char* file, int line, const char* function, const char* expr_str) AWESOME_NOEXCEPT
-{
-  using namespace std;
+namespace detail {
+  std::ostream& operator<<(std::ostream& os, const compare_eq&) { return os << "=="; }
+  std::ostream& operator<<(std::ostream& os, const compare_ne&) { return os << "!="; }
+  std::ostream& operator<<(std::ostream& os, const compare_lt&) { return os << "<" ; }
+  std::ostream& operator<<(std::ostream& os, const compare_le&) { return os << "<="; }
+  std::ostream& operator<<(std::ostream& os, const compare_gt&) { return os << ">" ; }
+  std::ostream& operator<<(std::ostream& os, const compare_ge&) { return os << ">="; }
 
-  cerr << boolalpha
-    << TColor::Bright << file << ":" << line << ": " << function << ": "
-    << TColor::Grey   << "Assertion `"
-    << TColor::Cyan   << expr_str
-    << TColor::None   << "' "
-    << TColor::Red    << "failed"
-    << TColor::None   << "."
-    << endl // Using 'endl' instead of "\n" because we need its flush.
-    ;
+  bool_expression::~bool_expression()
+  {
+    clear();
+  }
+
+  void bool_expression::clear()
+  {
+    while (token_count)
+    {
+      --token_count;
+      delete [] fail_expression[token_count];
+      fail_expression[token_count] = NULL;
+    }
+    delete [] fail_expression;
+    fail_expression = NULL;
+  }
+
+  bool_expression::const_iterator bool_expression::begin() const
+  {
+    return &fail_expression[0];
+  }
+
+  bool_expression::const_iterator bool_expression::end() const
+  {
+    return &fail_expression[token_count];
+  }
+
+  static std::ostream& operator<<(std::ostream& os, const bool_expression& expr)
+  {
+    if (expr.begin() == expr.end())
+      return os << TColor::Cyan << true;
+
+    bool is_operator = false;
+    for (bool_expression::const_iterator token = expr.begin(); token != expr.end(); ++token)
+    {
+      if (token != expr.begin())
+        os << os.widen(' ');
+      os << (is_operator ? TColor::Yellow : TColor::Cyan) << *token;
+      is_operator = !is_operator;
+    }
+    return os;
+  }
+}
+
+void assert_failed(const char* file, int line, const char* function, const char* expr_str, detail::bool_expression expr) AWESOME_NOEXCEPT
+{
+  {
+    using namespace std;
+
+    cerr << boolalpha
+      << TColor::Bright << file << ":" << line << ": " << function << ": "
+      << TColor::Grey   << "Assertion `"
+      << TColor::Cyan   << expr_str
+      << TColor::None   << "', with expansion `"
+                        << expr
+      << TColor::None   << "', "
+      << TColor::Red    << "failed"
+      << TColor::None   << "."
+      << endl // Using 'endl' instead of "\n" because we need its flush.
+      ;
+
+    // Prevent memory leak detectors from complaining about our memory (abort() prevents destructors from running).
+    expr.clear();
+  }
 
   abort();
 }
