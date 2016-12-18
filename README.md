@@ -25,6 +25,12 @@ Specifically the register spill-over caused by the need to retain the values of 
 
 TODO: Look into compiler optimizations capable of reconstructing the values instead of storing them.
 
+### Customizable Handling
+
+Permit the user to override the failure handler.
+It should stay `[[noreturn]]` though.
+Preferrably `noexcept` as well, although that should probably be customizable.
+
 ## License
 
 Copyright (C) 2016 Giel van Schijndel

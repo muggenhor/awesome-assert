@@ -132,6 +132,9 @@ namespace detail {
   }
 }
 
+#ifdef __GNUC__
+__attribute__((__weak__))
+#endif
 void assert_failed(const char* file, int line, const char* function, const char* expr_str, detail::bool_expression expr) AWESOME_NOEXCEPT
 {
   {
