@@ -32,7 +32,8 @@ add_library(${PROJECT_NAME}_static STATIC
   ${PUBLIC_HEADERS}
 )
 target_include_directories(${PROJECT_NAME}_static PUBLIC
-  include
+  $<BUILD_INTERFACE:$<$<COMPILE_LANGUAGE:CXX>:${PROJECT_SOURCE_DIR}/include>>
+  $<INSTALL_INTERFACE:$<$<COMPILE_LANGUAGE:CXX>:$<INSTALL_PREFIX>/include>>
 )
 add_library(${PROJECT_NAME} SHARED
   $<TARGET_PROPERTY:${PROJECT_NAME}_static,SOURCES>
@@ -59,9 +60,24 @@ generate_export_header(${PROJECT_NAME}
 
 # Make generated export header available for the target and its dependendees
 target_include_directories(${PROJECT_NAME}_static PUBLIC
-  $<$<COMPILE_LANGUAGE:CXX>:${PROJECT_BINARY_DIR}/${PUBLIC_HEADER_DIR}>
+  $<BUILD_INTERFACE:$<$<COMPILE_LANGUAGE:CXX>:${PROJECT_BINARY_DIR}/${PUBLIC_HEADER_DIR}>>
 )
 target_compile_definitions(${PROJECT_NAME}_static PUBLIC AWESOME_STATIC_DEFINE)
+
+install(TARGETS
+  ${PROJECT_NAME} ${PROJECT_NAME}_static
+  EXPORT ${PROJECT_NAME}
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+)
+install(FILES
+  ${PUBLIC_HEADERS}
+  DESTINATION ${PUBLIC_HEADER_DIR}
+)
+install(EXPORT ${PROJECT_NAME}
+  DESTINATION lib/cmake
+)
+export(EXPORT ${PROJECT_NAME})
 
 enable_testing()
 
