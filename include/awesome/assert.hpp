@@ -306,7 +306,7 @@ namespace AwesomeAssert
 # define AWESOME_FUNCTION __FUNCTION__
 #endif
 
-#define AWESOME_ASSERT(expr) \
+#define AWESOME_ASSERT_IMPL(expr) \
   do { \
     ::AwesomeAssert::detail::bool_expression evalExpr(::AwesomeAssert::detail::expression_decomposer() << expr); \
     if (AWESOME_UNLIKELY(!evalExpr)) \
@@ -314,6 +314,18 @@ namespace AwesomeAssert
       ::AwesomeAssert::assert_failed(__FILE__, __LINE__, AWESOME_FUNCTION, #expr, AWESOME_MOVE(evalExpr)); \
     } \
   } while (0)
+
+#ifdef __clang__
+  #define AWESOME_ASSERT(expr) \
+    do { \
+      _Pragma("clang diagnostic push") \
+      _Pragma("clang diagnostic ignored \"-Woverloaded-shift-op-parentheses\"") \
+      AWESOME_ASSERT_IMPL(expr); \
+      _Pragma("clang diagnostic pop") \
+    } while (0)
+#else
+  #define AWESOME_ASSERT(expr) AWESOME_ASSERT_IMPL(expr)
+#endif
 
 #undef AWESOME_NORETURN
 #undef AWESOME_FWD_REF
