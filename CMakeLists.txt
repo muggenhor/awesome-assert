@@ -27,12 +27,18 @@ set(PUBLIC_HEADERS
   ${PUBLIC_HEADER_DIR}/assert.hpp
 )
 
-add_library(${PROJECT_NAME} STATIC
+add_library(${PROJECT_NAME}_static STATIC
   src/assert.cpp
   ${PUBLIC_HEADERS}
 )
-target_include_directories(${PROJECT_NAME} PUBLIC
+target_include_directories(${PROJECT_NAME}_static PUBLIC
   include
+)
+add_library(${PROJECT_NAME} SHARED
+  $<TARGET_PROPERTY:${PROJECT_NAME}_static,SOURCES>
+)
+target_include_directories(${PROJECT_NAME} PUBLIC
+  $<TARGET_PROPERTY:${PROJECT_NAME}_static,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
 enable_testing()
