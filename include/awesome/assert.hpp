@@ -21,6 +21,7 @@
 #ifndef __INCLUDED_AWESOME_ASSERT_HPP__
 #define __INCLUDED_AWESOME_ASSERT_HPP__
 
+#include "awesome_export.h"
 #include <iosfwd>
 
 #if __cplusplus >= 201103L
@@ -89,26 +90,26 @@ namespace AwesomeAssert
   };
 
   // Reduce potential for inlining
-  extern template struct string_maker<bool>;
-  extern template struct string_maker<short>;
-  extern template struct string_maker<unsigned short>;
-  extern template struct string_maker<int>;
-  extern template struct string_maker<unsigned int>;
-  extern template struct string_maker<long>;
-  extern template struct string_maker<unsigned long>;
-  extern template struct string_maker<long long>;
-  extern template struct string_maker<unsigned long long>;
-  extern template struct string_maker<float>;
-  extern template struct string_maker<double>;
-  extern template struct string_maker<long double>;
-  extern template struct string_maker<void*>;
-  extern template struct string_maker<const void*>;
-  extern template struct string_maker<char>;
-  extern template struct string_maker<signed char>;
-  extern template struct string_maker<unsigned char>;
-  extern template struct string_maker<const char*>;
-  extern template struct string_maker<const signed char*>;
-  extern template struct string_maker<const unsigned char*>;
+  extern template struct AWESOME_EXPORT string_maker<bool>;
+  extern template struct AWESOME_EXPORT string_maker<short>;
+  extern template struct AWESOME_EXPORT string_maker<unsigned short>;
+  extern template struct AWESOME_EXPORT string_maker<int>;
+  extern template struct AWESOME_EXPORT string_maker<unsigned int>;
+  extern template struct AWESOME_EXPORT string_maker<long>;
+  extern template struct AWESOME_EXPORT string_maker<unsigned long>;
+  extern template struct AWESOME_EXPORT string_maker<long long>;
+  extern template struct AWESOME_EXPORT string_maker<unsigned long long>;
+  extern template struct AWESOME_EXPORT string_maker<float>;
+  extern template struct AWESOME_EXPORT string_maker<double>;
+  extern template struct AWESOME_EXPORT string_maker<long double>;
+  extern template struct AWESOME_EXPORT string_maker<void*>;
+  extern template struct AWESOME_EXPORT string_maker<const void*>;
+  extern template struct AWESOME_EXPORT string_maker<char>;
+  extern template struct AWESOME_EXPORT string_maker<signed char>;
+  extern template struct AWESOME_EXPORT string_maker<unsigned char>;
+  extern template struct AWESOME_EXPORT string_maker<const char*>;
+  extern template struct AWESOME_EXPORT string_maker<const signed char*>;
+  extern template struct AWESOME_EXPORT string_maker<const unsigned char*>;
 
   namespace detail
   {
@@ -123,12 +124,12 @@ namespace AwesomeAssert
     struct compare_ge { template <class TL, class TR> bool operator()(const TL& lhs, const TR& rhs) const { return lhs >= rhs; } };
   }
 
-  template <> struct string_maker<detail::compare_eq> : stringifier { virtual std::ostream& convert(std::ostream& os) const AWESOME_OVERRIDE; };
-  template <> struct string_maker<detail::compare_ne> : stringifier { virtual std::ostream& convert(std::ostream& os) const AWESOME_OVERRIDE; };
-  template <> struct string_maker<detail::compare_lt> : stringifier { virtual std::ostream& convert(std::ostream& os) const AWESOME_OVERRIDE; };
-  template <> struct string_maker<detail::compare_le> : stringifier { virtual std::ostream& convert(std::ostream& os) const AWESOME_OVERRIDE; };
-  template <> struct string_maker<detail::compare_gt> : stringifier { virtual std::ostream& convert(std::ostream& os) const AWESOME_OVERRIDE; };
-  template <> struct string_maker<detail::compare_ge> : stringifier { virtual std::ostream& convert(std::ostream& os) const AWESOME_OVERRIDE; };
+  template <> struct AWESOME_EXPORT string_maker<detail::compare_eq> : stringifier { virtual std::ostream& convert(std::ostream& os) const AWESOME_OVERRIDE; };
+  template <> struct AWESOME_EXPORT string_maker<detail::compare_ne> : stringifier { virtual std::ostream& convert(std::ostream& os) const AWESOME_OVERRIDE; };
+  template <> struct AWESOME_EXPORT string_maker<detail::compare_lt> : stringifier { virtual std::ostream& convert(std::ostream& os) const AWESOME_OVERRIDE; };
+  template <> struct AWESOME_EXPORT string_maker<detail::compare_le> : stringifier { virtual std::ostream& convert(std::ostream& os) const AWESOME_OVERRIDE; };
+  template <> struct AWESOME_EXPORT string_maker<detail::compare_gt> : stringifier { virtual std::ostream& convert(std::ostream& os) const AWESOME_OVERRIDE; };
+  template <> struct AWESOME_EXPORT string_maker<detail::compare_ge> : stringifier { virtual std::ostream& convert(std::ostream& os) const AWESOME_OVERRIDE; };
 
   namespace detail
   {
@@ -267,7 +268,7 @@ namespace AwesomeAssert
    * asserted condition is met.  The \c noexcept tells the compiler it doesn't have to produce stack unwinding
    * information for exceptions, giving another optimisation opportunity.
    */
-  AWESOME_NORETURN
+  AWESOME_NORETURN AWESOME_EXPORT
   void assert_failed(const char* file, int line, const char* function, const char* expr_str, detail::bool_expression expr) AWESOME_NOEXCEPT;
 }
 

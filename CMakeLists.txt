@@ -40,6 +40,28 @@ add_library(${PROJECT_NAME} SHARED
 target_include_directories(${PROJECT_NAME} PUBLIC
   $<TARGET_PROPERTY:${PROJECT_NAME}_static,INTERFACE_INCLUDE_DIRECTORIES>
 )
+set_target_properties(
+    ${PROJECT_NAME}_static
+    ${PROJECT_NAME}
+  PROPERTIES
+    VISIBILITY_INLINES_HIDDEN ON
+    CXX_VISIBILITY_PRESET hidden
+)
+
+include(GenerateExportHeader)
+
+set(EXPORT_FILE_NAME ${PROJECT_BINARY_DIR}/${PUBLIC_HEADER_DIR}/awesome_export.h)
+list(APPEND PUBLIC_HEADERS ${EXPORT_FILE_NAME})
+generate_export_header(${PROJECT_NAME}
+  BASE_NAME Awesome
+  EXPORT_FILE_NAME ${EXPORT_FILE_NAME}
+)
+
+# Make generated export header available for the target and its dependendees
+target_include_directories(${PROJECT_NAME}_static PUBLIC
+  $<$<COMPILE_LANGUAGE:CXX>:${PROJECT_BINARY_DIR}/${PUBLIC_HEADER_DIR}>
+)
+target_compile_definitions(${PROJECT_NAME}_static PUBLIC AWESOME_STATIC_DEFINE)
 
 enable_testing()
 
