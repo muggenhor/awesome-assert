@@ -181,8 +181,25 @@ namespace AwesomeAssert
           token_count = 0;
       }
 
-      ~bool_expression();
-      void clear();
+      // Destructor must be inlineable so that the compiler can completely eliminate it.
+      // Likely this is so that it knows it has no side-effects.
+      ~bool_expression()
+      {
+        clear();
+      }
+
+      void clear()
+      {
+        while (token_count)
+        {
+          --token_count;
+          delete fail_expression[token_count];
+          fail_expression[token_count] = NULL;
+        }
+        delete [] fail_expression;
+        fail_expression = NULL;
+      }
+
       const_iterator begin() const;
       const_iterator end() const;
 

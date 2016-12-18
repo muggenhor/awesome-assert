@@ -118,23 +118,6 @@ namespace detail {
     return os;
   }
 
-  bool_expression::~bool_expression()
-  {
-    clear();
-  }
-
-  void bool_expression::clear()
-  {
-    while (token_count)
-    {
-      --token_count;
-      delete fail_expression[token_count];
-      fail_expression[token_count] = NULL;
-    }
-    delete [] fail_expression;
-    fail_expression = NULL;
-  }
-
   bool_expression::const_iterator bool_expression::begin() const
   {
     return &fail_expression[0];
