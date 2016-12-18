@@ -277,12 +277,22 @@ namespace AwesomeAssert
 # define AWESOME_UNLIKELY(x) x
 #endif
 
+#if defined(__GNUC__)
+# define AWESOME_FUNCTION __PRETTY_FUNCTION__
+#elif defined(__FUNCSIG__)
+# define AWESOME_FUNCTION __FUNCSIG__
+#elif __cplusplus >= 201103
+# define AWESOME_FUNCTION __func__
+#else
+# define AWESOME_FUNCTION __FUNCTION__
+#endif
+
 #define AWESOME_ASSERT(expr) \
   do { \
     ::AwesomeAssert::detail::bool_expression evalExpr(::AwesomeAssert::detail::expression_decomposer() << expr); \
     if (AWESOME_UNLIKELY(!evalExpr)) \
     { \
-      ::AwesomeAssert::assert_failed(__FILE__, __LINE__, __FUNCTION__, #expr, AWESOME_MOVE(evalExpr)); \
+      ::AwesomeAssert::assert_failed(__FILE__, __LINE__, AWESOME_FUNCTION, #expr, AWESOME_MOVE(evalExpr)); \
     } \
   } while (0)
 
