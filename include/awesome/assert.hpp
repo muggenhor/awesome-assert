@@ -247,6 +247,24 @@ namespace AwesomeAssert
       template <class R> bool_expression operator> (AWESOME_FWD_REF(R) rhs) AWESOME_RREF_OR_CONST { return bool_expression(AWESOME_MOVE(lhs), compare_gt(), AWESOME_FWD(R, rhs)); }
       template <class R> bool_expression operator>=(AWESOME_FWD_REF(R) rhs) AWESOME_RREF_OR_CONST { return bool_expression(AWESOME_MOVE(lhs), compare_ge(), AWESOME_FWD(R, rhs)); }
 
+#if __cplusplus >= 201103L
+      // Necessary to permit usage of these in expressions. They should be allowed because they
+      // have higher precedence than comparison operators, but they're not without this because we
+      // use left shift in expression_decomposer.
+      template <typename R>
+      auto operator<<(AWESOME_FWD_REF(R) rhs) AWESOME_RREF_OR_CONST
+        -> expression_lhs<decltype(T() << AWESOME_FWD(R, rhs))>
+      {
+        return AWESOME_MOVE(lhs) << AWESOME_FWD(R, rhs);
+      }
+      template <typename R>
+      auto operator>>(AWESOME_FWD_REF(R) rhs) AWESOME_RREF_OR_CONST
+        -> expression_lhs<decltype(T() >> AWESOME_FWD(R, rhs))>
+      {
+        return AWESOME_MOVE(lhs) >> AWESOME_FWD(R, rhs);
+      }
+#endif
+
     private:
       T lhs;
     };
