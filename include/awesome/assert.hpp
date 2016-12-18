@@ -45,9 +45,18 @@
 #endif
 
 #if __cplusplus >= 201103L
+  #include <utility>
   #define AWESOME_FWD_REF(T) T&&
+  #define AWESOME_MOVE(x) std::move(x)
+  #define AWESOME_FWD(T, x) std::forward<T>(x)
+  #define AWESOME_REMOVE_REF(T) typename std::remove_reference<T>::type
+  #define AWESOME_RREF_OR_CONST &&
 #else
   #define AWESOME_FWD_REF(T) const T&
+  #define AWESOME_MOVE(x) x
+  #define AWESOME_FWD(T, x) x
+  #define AWESOME_REMOVE_REF(T) T
+  #define AWESOME_RREF_OR_CONST const
 #endif
 
 namespace AwesomeAssert
@@ -67,7 +76,7 @@ namespace AwesomeAssert
   struct string_maker : stringifier
   {
     string_maker(T val_)
-      : val(val_)
+      : val(AWESOME_MOVE(val_))
     {}
 
     virtual std::ostream& convert(std::ostream& os) const AWESOME_OVERRIDE
@@ -127,13 +136,13 @@ namespace AwesomeAssert
     {
     private:
       template <typename T>
-      static stringifier** create_expression_list(const T& val)
+      static stringifier** create_expression_list(AWESOME_FWD_REF(T) val)
       {
         stringifier** const expr = new stringifier*[2];
         expr[0] = expr[1] = NULL;
         try
         {
-          expr[0] = new string_maker<T>(val);
+          expr[0] = new string_maker<T>(AWESOME_FWD(T, val));
           return expr;
         }
         catch (...)
@@ -144,15 +153,15 @@ namespace AwesomeAssert
       }
 
       template <typename TL, typename TO, typename TR>
-      static stringifier** create_expression_list(const TL& lhs, const TO&, const TR& rhs)
+      static stringifier** create_expression_list(AWESOME_FWD_REF(TL) lhs, const TO&, AWESOME_FWD_REF(TR) rhs)
       {
         stringifier** const expr = new stringifier*[4];
         expr[0] = expr[1] = expr[2] = expr[3] = NULL;
         try
         {
-          expr[0] = new string_maker<TL>(lhs);
+          expr[0] = new string_maker<TL>(AWESOME_FWD(TL, lhs));
           expr[1] = new string_maker<TO>();
-          expr[2] = new string_maker<TR>(rhs);
+          expr[2] = new string_maker<TR>(AWESOME_FWD(TR, rhs));
           return expr;
         }
         catch (...)
@@ -170,15 +179,15 @@ namespace AwesomeAssert
       typedef const_iterator iterator;
 
       template <typename T>
-      bool_expression(const T& val)
-        : fail_expression(val ? NULL : create_expression_list(val))
+      bool_expression(AWESOME_FWD_REF(T) val)
+        : fail_expression(val ? NULL : create_expression_list(AWESOME_FWD(T, val)))
       {
       }
 
       template <typename TL, typename TO, typename TR>
       bool_expression(
-          const TL& lhs, const TO& op, const TR& rhs)
-        : fail_expression(op(lhs, rhs) ? NULL : create_expression_list(lhs, op, rhs))
+          AWESOME_FWD_REF(TL) lhs, AWESOME_FWD_REF(TO) op, AWESOME_FWD_REF(TR) rhs)
+        : fail_expression(op(lhs, rhs) ? NULL : create_expression_list(AWESOME_FWD(TL, lhs), AWESOME_FWD(TO, op), AWESOME_FWD(TR, rhs)))
       {
       }
 
@@ -224,18 +233,18 @@ namespace AwesomeAssert
     struct expression_lhs
     {
       expression_lhs(T lhs_)
-        : lhs(lhs_)
+        : lhs(AWESOME_MOVE(lhs_))
       {}
 
       // For unary expressions
-      operator bool_expression() { return bool_expression(lhs); }
+      operator bool_expression() AWESOME_RREF_OR_CONST { return bool_expression(AWESOME_MOVE(lhs)); }
 
-      template <class R> bool_expression operator==(const R& rhs) { return bool_expression(lhs, compare_eq(), rhs); }
-      template <class R> bool_expression operator!=(const R& rhs) { return bool_expression(lhs, compare_ne(), rhs); }
-      template <class R> bool_expression operator< (const R& rhs) { return bool_expression(lhs, compare_lt(), rhs); }
-      template <class R> bool_expression operator<=(const R& rhs) { return bool_expression(lhs, compare_le(), rhs); }
-      template <class R> bool_expression operator> (const R& rhs) { return bool_expression(lhs, compare_gt(), rhs); }
-      template <class R> bool_expression operator>=(const R& rhs) { return bool_expression(lhs, compare_ge(), rhs); }
+      template <class R> bool_expression operator==(AWESOME_FWD_REF(R) rhs) AWESOME_RREF_OR_CONST { return bool_expression(AWESOME_MOVE(lhs), compare_eq(), AWESOME_FWD(R, rhs)); }
+      template <class R> bool_expression operator!=(AWESOME_FWD_REF(R) rhs) AWESOME_RREF_OR_CONST { return bool_expression(AWESOME_MOVE(lhs), compare_ne(), AWESOME_FWD(R, rhs)); }
+      template <class R> bool_expression operator< (AWESOME_FWD_REF(R) rhs) AWESOME_RREF_OR_CONST { return bool_expression(AWESOME_MOVE(lhs), compare_lt(), AWESOME_FWD(R, rhs)); }
+      template <class R> bool_expression operator<=(AWESOME_FWD_REF(R) rhs) AWESOME_RREF_OR_CONST { return bool_expression(AWESOME_MOVE(lhs), compare_le(), AWESOME_FWD(R, rhs)); }
+      template <class R> bool_expression operator> (AWESOME_FWD_REF(R) rhs) AWESOME_RREF_OR_CONST { return bool_expression(AWESOME_MOVE(lhs), compare_gt(), AWESOME_FWD(R, rhs)); }
+      template <class R> bool_expression operator>=(AWESOME_FWD_REF(R) rhs) AWESOME_RREF_OR_CONST { return bool_expression(AWESOME_MOVE(lhs), compare_ge(), AWESOME_FWD(R, rhs)); }
 
     private:
       T lhs;
@@ -244,9 +253,9 @@ namespace AwesomeAssert
     struct expression_decomposer
     {
       template <typename T>
-      expression_lhs<T> operator<<(const T& lhs)
+      expression_lhs<AWESOME_REMOVE_REF(T)> operator<<(AWESOME_FWD_REF(T) lhs)
       {
-        return expression_lhs<T>(lhs);
+        return expression_lhs<AWESOME_REMOVE_REF(T)>(AWESOME_FWD(T, lhs));
       }
     };
   }
@@ -273,11 +282,12 @@ namespace AwesomeAssert
     ::AwesomeAssert::detail::bool_expression evalExpr(::AwesomeAssert::detail::expression_decomposer() << expr); \
     if (AWESOME_UNLIKELY(!evalExpr)) \
     { \
-      ::AwesomeAssert::assert_failed(__FILE__, __LINE__, __FUNCTION__, #expr, evalExpr); \
+      ::AwesomeAssert::assert_failed(__FILE__, __LINE__, __FUNCTION__, #expr, AWESOME_MOVE(evalExpr)); \
     } \
   } while (0)
 
 #undef AWESOME_NORETURN
 #undef AWESOME_FWD_REF
+#undef AWESOME_FWD
 
 #endif // __INCLUDED_AWESOME_ASSERT_HPP__
