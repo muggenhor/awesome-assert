@@ -44,6 +44,12 @@
   #define AWESOME_NORETURN
 #endif
 
+#if __cplusplus >= 201103L
+  #define AWESOME_FWD_REF(T) T&&
+#else
+  #define AWESOME_FWD_REF(T) const T&
+#endif
+
 namespace AwesomeAssert
 {
   struct stringifier
@@ -176,6 +182,13 @@ namespace AwesomeAssert
       {
       }
 
+      bool_expression(AWESOME_FWD_REF(bool_expression) rhs)
+        : fail_expression(rhs.fail_expression)
+      {
+        // Const cast necessary because this is a stealing copy constructor when on C++98.
+        const_cast<bool_expression&>(rhs).fail_expression = NULL;
+      }
+
       ~bool_expression()
       {
         clear();
@@ -265,5 +278,6 @@ namespace AwesomeAssert
   } while (0)
 
 #undef AWESOME_NORETURN
+#undef AWESOME_FWD_REF
 
 #endif // __INCLUDED_AWESOME_ASSERT_HPP__
