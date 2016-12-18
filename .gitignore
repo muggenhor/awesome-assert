@@ -1,0 +1,9 @@
+# Qt Creator
+CMakeLists.txt.user
+
+# Build artifacts
+/build/
+/compile_commands.json
+
+# vim swap files
+*.sw[pon]
