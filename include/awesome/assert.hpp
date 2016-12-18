@@ -257,7 +257,7 @@ namespace AwesomeAssert
 
 #define AWESOME_ASSERT(expr) \
   do { \
-    ::AwesomeAssert::detail::bool_expression evalExpr = (::AwesomeAssert::detail::expression_decomposer() << expr); \
+    ::AwesomeAssert::detail::bool_expression evalExpr(::AwesomeAssert::detail::expression_decomposer() << expr); \
     if (AWESOME_UNLIKELY(!evalExpr)) \
     { \
       ::AwesomeAssert::assert_failed(__FILE__, __LINE__, __FUNCTION__, #expr, evalExpr); \
