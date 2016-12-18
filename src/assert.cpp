@@ -120,12 +120,15 @@ namespace detail {
 
   bool_expression::const_iterator bool_expression::begin() const
   {
-    return &fail_expression[0];
+    return fail_expression;
   }
 
   bool_expression::const_iterator bool_expression::end() const
   {
-    return &fail_expression[token_count];
+    const_iterator cur = fail_expression;
+    while (cur && *cur)
+      ++cur;
+    return cur;
   }
 }
 

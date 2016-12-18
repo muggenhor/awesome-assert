@@ -123,7 +123,8 @@ namespace AwesomeAssert
       template <typename T>
       static stringifier** create_expression_list(const T& val)
       {
-        stringifier** const expr = new stringifier*[1];
+        stringifier** const expr = new stringifier*[2];
+        expr[0] = expr[1] = NULL;
         try
         {
           expr[0] = new string_maker<T>(val);
@@ -139,8 +140,8 @@ namespace AwesomeAssert
       template <typename TL, typename TO, typename TR>
       static stringifier** create_expression_list(const TL& lhs, const TO&, const TR& rhs)
       {
-        stringifier** const expr = new stringifier*[3];
-        expr[0] = expr[1] = expr[2] = NULL;
+        stringifier** const expr = new stringifier*[4];
+        expr[0] = expr[1] = expr[2] = expr[3] = NULL;
         try
         {
           expr[0] = new string_maker<TL>(lhs);
@@ -165,24 +166,16 @@ namespace AwesomeAssert
       template <typename T>
       bool_expression(const T& val)
         : fail_expression(val ? NULL : create_expression_list(val))
-        , token_count(1)
       {
-        if (!fail_expression)
-          token_count = 0;
       }
 
       template <typename TL, typename TO, typename TR>
       bool_expression(
           const TL& lhs, const TO& op, const TR& rhs)
         : fail_expression(op(lhs, rhs) ? NULL : create_expression_list(lhs, op, rhs))
-        , token_count(3)
       {
-        if (!fail_expression)
-          token_count = 0;
       }
 
-      // Destructor must be inlineable so that the compiler can completely eliminate it.
-      // Likely this is so that it knows it has no side-effects.
       ~bool_expression()
       {
         clear();
@@ -190,11 +183,10 @@ namespace AwesomeAssert
 
       void clear()
       {
-        while (token_count)
+        for (stringifier** cur = fail_expression; cur && *cur; ++cur)
         {
-          --token_count;
-          delete fail_expression[token_count];
-          fail_expression[token_count] = NULL;
+          delete *cur;
+          *cur = NULL;
         }
         delete [] fail_expression;
         fail_expression = NULL;
@@ -209,9 +201,10 @@ namespace AwesomeAssert
       }
 
     private:
-      //! Storing string convertors instead of strings to prevent inlining of conversion code.
+      //! Storing string converters instead of strings to prevent inlining of conversion code.
+      //! Either \c NULL or terminated with a \c NULL sentinel. This removes the need for a separate
+      //! size field, which would increase code size for setting up and copying that field.
       stringifier** fail_expression;
-      signed char token_count;
     };
 
     template <typename T>
