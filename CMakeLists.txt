@@ -18,7 +18,7 @@
 # If not, see <http://www.gnu.org/licenses/>.
 #
 
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.2)
 
 project(AwesomeAssert)
 
@@ -32,8 +32,8 @@ add_library(${PROJECT_NAME}_static STATIC
   ${PUBLIC_HEADERS}
 )
 target_include_directories(${PROJECT_NAME}_static PUBLIC
-  $<BUILD_INTERFACE:$<$<COMPILE_LANGUAGE:CXX>:${PROJECT_SOURCE_DIR}/include>>
-  $<INSTALL_INTERFACE:$<$<COMPILE_LANGUAGE:CXX>:$<INSTALL_PREFIX>/include>>
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>
 )
 add_library(${PROJECT_NAME} SHARED
   $<TARGET_PROPERTY:${PROJECT_NAME}_static,SOURCES>
@@ -60,7 +60,7 @@ generate_export_header(${PROJECT_NAME}
 
 # Make generated export header available for the target and its dependendees
 target_include_directories(${PROJECT_NAME}_static PUBLIC
-  $<BUILD_INTERFACE:$<$<COMPILE_LANGUAGE:CXX>:${PROJECT_BINARY_DIR}/${PUBLIC_HEADER_DIR}>>
+  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/${PUBLIC_HEADER_DIR}>
 )
 target_compile_definitions(${PROJECT_NAME}_static PUBLIC AWESOME_STATIC_DEFINE)
 
@@ -86,7 +86,7 @@ add_executable(${PROJECT_NAME}.Test.simple
 )
 target_link_libraries(${PROJECT_NAME}.Test.simple PRIVATE AwesomeAssert)
 add_test(NAME ${PROJECT_NAME}.Test.simple.failure
-  COMMAND ${PROJECT_NAME}.Test.simple
+  COMMAND sh -c $<TARGET_FILE:${PROJECT_NAME}.Test.simple>
 )
 add_test(NAME ${PROJECT_NAME}.Test.simple.success
   COMMAND ${PROJECT_NAME}.Test.simple 2 3 4 5

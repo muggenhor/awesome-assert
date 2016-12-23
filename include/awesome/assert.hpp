@@ -62,7 +62,7 @@
 
 namespace AwesomeAssert
 {
-  struct stringifier
+  struct AWESOME_EXPORT stringifier
   {
     virtual ~stringifier();
     virtual std::ostream& convert(std::ostream& os) const = 0;
