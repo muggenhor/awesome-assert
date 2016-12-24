@@ -4,6 +4,7 @@ addons:
     packages:
       - cmake
       - cmake-data
+      - ninja-build
     sources:
       - george-edison55-precise-backports
 compiler:
@@ -14,6 +15,6 @@ env:
 before_script:
   - cmake -E make_directory build
 script:
-  - cmake -E chdir build cmake ..
+  - cmake -E chdir build cmake -G Ninja ..
   - cmake --build build
   - cmake --build build --target test
