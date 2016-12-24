@@ -2,6 +2,8 @@
 
 An assert implementation that aims to provide usable information while maintaining as small a performance footprint as possible when _not_ failing.
 
+[![Build Status](https://travis-ci.org/muggenhor/awesome-assert.svg?branch=master)](https://travis-ci.org/muggenhor/awesome-assert)
+
 ## Requirements
 
 ### Capture and Log Context When Failing
