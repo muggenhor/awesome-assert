@@ -244,11 +244,6 @@ namespace AwesomeAssert
 
       ~bool_expression() AWESOME_NOEXCEPT
       {
-        clear();
-      }
-
-      void clear() AWESOME_NOEXCEPT
-      {
         delete fail_expression;
         fail_expression = NULL;
       }

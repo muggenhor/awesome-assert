@@ -198,10 +198,14 @@ namespace detail {
 #ifdef __GNUC__
 __attribute__((__weak__))
 #endif
-void assert_failed(const char* file, int line, const char* function, const char* expr_str, detail::bool_expression expr) AWESOME_NOEXCEPT
+void assert_failed(const char* file, int line, const char* function, const char* expr_str, detail::bool_expression in_expr) AWESOME_NOEXCEPT
 {
   {
     using namespace std;
+
+    // Prevent memory leak detectors from complaining about our memory (abort() prevents destructors
+    // from running), by ensuring this gets destroyed as soon as we leave this scope.
+    detail::bool_expression expr(AWESOME_MOVE(in_expr));
 
     cerr << boolalpha
       << TColor::Bright << file << ":" << line << ": " << function << ": "
@@ -214,9 +218,6 @@ void assert_failed(const char* file, int line, const char* function, const char*
       << TColor::None   << "."
       << endl // Using 'endl' instead of "\n" because we need its flush.
       ;
-
-    // Prevent memory leak detectors from complaining about our memory (abort() prevents destructors from running).
-    expr.clear();
   }
 
   abort();
