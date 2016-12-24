@@ -9,6 +9,9 @@ addons:
       - ninja-build
     sources:
       - george-edison55-precise-backports
+os:
+  - linux
+  - osx
 compiler:
   - clang
   - gcc
@@ -20,5 +23,11 @@ matrix:
   exclude:
     - compiler: clang
       env: CPPCHECK=1
+    - os: osx
+      env: CPPCHECK=1
+    - os: osx
+      compiler: gcc
+before_install:
+  - if [[ "${TRAVIS_OS_NAME}" = "osx" ]]; then brew update && brew install ninja; fi
 script:
   - ./.travis.sh

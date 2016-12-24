@@ -7,10 +7,8 @@ CTEST_OUTPUT_ON_FAILURE=ON
 CMAKE_CXX_STANDARD_REQUIRED=ON
 export CTEST_OUTPUT_ON_FAILURE CMAKE_CXX_STANDARD_REQUIRED
 
-if [ "${CC}" = "clang" ]; then
+if [ "${CC}" = "clang" -a "${TRAVIS_OS_NAME}" != "osx" ]; then
   SCAN_BUILD_CMD="scan-build --use-cc=${CC} --use-c++=${CXX}"
-else
-  SCAN_BUILD_CMD=""
 fi
 
 cmake -E make_directory build
