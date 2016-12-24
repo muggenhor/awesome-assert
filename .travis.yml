@@ -13,7 +13,7 @@ compiler:
   - clang
   - gcc
 env:
-  - CTEST_OUTPUT_ON_FAILURE=ON ANALYZE=1
-  - CTEST_OUTPUT_ON_FAILURE=ON ANALYZE=
+  - ANALYZE=1
+  - ANALYZE=
 script:
   - ./.travis.sh

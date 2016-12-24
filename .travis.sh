@@ -3,6 +3,9 @@
 set -e
 set -x
 
+CTEST_OUTPUT_ON_FAILURE=ON
+export CTEST_OUTPUT_ON_FAILURE
+
 if [ "${ANALYZE}" -a "${CC}" = "clang" ]; then
   SCAN_BUILD_CMD="scan-build --use-cc=${CC} --use-c++=${CXX}"
 else
