@@ -13,8 +13,12 @@ compiler:
   - clang
   - gcc
 env:
-  - ANALYZE=1
+  - CPPCHECK=1
   - CMAKE_CXX_STANDARD=98
   - CMAKE_CXX_STANDARD=11
+matrix:
+  exclude:
+    - compiler: clang
+      env: CPPCHECK=1
 script:
   - ./.travis.sh
