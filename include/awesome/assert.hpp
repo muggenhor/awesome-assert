@@ -110,8 +110,8 @@ namespace AwesomeAssert
     T val;
   };
 
+  // Reduce amount of code needing to be duplicated across object files
 #if __cplusplus >= 201103L
-  // Reduce potential for inlining
   extern template struct AWESOME_EXPORT string_maker<bool>;
   extern template struct AWESOME_EXPORT string_maker<short>;
   extern template struct AWESOME_EXPORT string_maker<unsigned short>;
@@ -132,6 +132,27 @@ namespace AwesomeAssert
   extern template struct AWESOME_EXPORT string_maker<const char*>;
   extern template struct AWESOME_EXPORT string_maker<const signed char*>;
   extern template struct AWESOME_EXPORT string_maker<const unsigned char*>;
+#else
+  template <> AWESOME_EXPORT std::ostream& string_maker<bool                >::convert(std::ostream&) const;
+  template <> AWESOME_EXPORT std::ostream& string_maker<short               >::convert(std::ostream&) const;
+  template <> AWESOME_EXPORT std::ostream& string_maker<unsigned short      >::convert(std::ostream&) const;
+  template <> AWESOME_EXPORT std::ostream& string_maker<int                 >::convert(std::ostream&) const;
+  template <> AWESOME_EXPORT std::ostream& string_maker<unsigned int        >::convert(std::ostream&) const;
+  template <> AWESOME_EXPORT std::ostream& string_maker<long                >::convert(std::ostream&) const;
+  template <> AWESOME_EXPORT std::ostream& string_maker<unsigned long       >::convert(std::ostream&) const;
+  template <> AWESOME_EXPORT std::ostream& string_maker<long long           >::convert(std::ostream&) const;
+  template <> AWESOME_EXPORT std::ostream& string_maker<unsigned long long  >::convert(std::ostream&) const;
+  template <> AWESOME_EXPORT std::ostream& string_maker<float               >::convert(std::ostream&) const;
+  template <> AWESOME_EXPORT std::ostream& string_maker<double              >::convert(std::ostream&) const;
+  template <> AWESOME_EXPORT std::ostream& string_maker<long double         >::convert(std::ostream&) const;
+  template <> AWESOME_EXPORT std::ostream& string_maker<void*               >::convert(std::ostream&) const;
+  template <> AWESOME_EXPORT std::ostream& string_maker<const void*         >::convert(std::ostream&) const;
+  template <> AWESOME_EXPORT std::ostream& string_maker<char                >::convert(std::ostream&) const;
+  template <> AWESOME_EXPORT std::ostream& string_maker<signed char         >::convert(std::ostream&) const;
+  template <> AWESOME_EXPORT std::ostream& string_maker<unsigned char       >::convert(std::ostream&) const;
+  template <> AWESOME_EXPORT std::ostream& string_maker<const char*         >::convert(std::ostream&) const;
+  template <> AWESOME_EXPORT std::ostream& string_maker<const signed char*  >::convert(std::ostream&) const;
+  template <> AWESOME_EXPORT std::ostream& string_maker<const unsigned char*>::convert(std::ostream&) const;
 #endif
 
   namespace detail

@@ -54,6 +54,27 @@ template struct string_maker<unsigned char>;
 template struct string_maker<const char*>;
 template struct string_maker<const signed char*>;
 template struct string_maker<const unsigned char*>;
+#else
+template <> std::ostream& string_maker<bool                >::convert(std::ostream& os) const { return os << val; }
+template <> std::ostream& string_maker<short               >::convert(std::ostream& os) const { return os << val; }
+template <> std::ostream& string_maker<unsigned short      >::convert(std::ostream& os) const { return os << val; }
+template <> std::ostream& string_maker<int                 >::convert(std::ostream& os) const { return os << val; }
+template <> std::ostream& string_maker<unsigned int        >::convert(std::ostream& os) const { return os << val; }
+template <> std::ostream& string_maker<long                >::convert(std::ostream& os) const { return os << val; }
+template <> std::ostream& string_maker<unsigned long       >::convert(std::ostream& os) const { return os << val; }
+template <> std::ostream& string_maker<long long           >::convert(std::ostream& os) const { return os << val; }
+template <> std::ostream& string_maker<unsigned long long  >::convert(std::ostream& os) const { return os << val; }
+template <> std::ostream& string_maker<float               >::convert(std::ostream& os) const { return os << val; }
+template <> std::ostream& string_maker<double              >::convert(std::ostream& os) const { return os << val; }
+template <> std::ostream& string_maker<long double         >::convert(std::ostream& os) const { return os << val; }
+template <> std::ostream& string_maker<void*               >::convert(std::ostream& os) const { return os << val; }
+template <> std::ostream& string_maker<const void*         >::convert(std::ostream& os) const { return os << val; }
+template <> std::ostream& string_maker<char                >::convert(std::ostream& os) const { return os << val; }
+template <> std::ostream& string_maker<signed char         >::convert(std::ostream& os) const { return os << val; }
+template <> std::ostream& string_maker<unsigned char       >::convert(std::ostream& os) const { return os << val; }
+template <> std::ostream& string_maker<const char*         >::convert(std::ostream& os) const { return os << val; }
+template <> std::ostream& string_maker<const signed char*  >::convert(std::ostream& os) const { return os << val; }
+template <> std::ostream& string_maker<const unsigned char*>::convert(std::ostream& os) const { return os << val; }
 #endif
 
 std::ostream& string_maker<detail::compare_eq>::convert(std::ostream& os) const { return os << "=="; }
