@@ -23,6 +23,7 @@
 
 #include "awesome_export.h"
 #include <iosfwd>
+#include <iterator>
 
 #if __cplusplus >= 201103L
   #define AWESOME_NOEXCEPT noexcept
@@ -62,10 +63,30 @@
 
 namespace AwesomeAssert
 {
+  namespace detail
+  {
+    struct bool_expression;
+  }
+
   struct AWESOME_EXPORT stringifier
   {
+    stringifier() AWESOME_NOEXCEPT
+      : next(NULL)
+    {}
     virtual ~stringifier();
     virtual std::ostream& convert(std::ostream& os) const = 0;
+
+  private:
+    friend struct detail::bool_expression;
+    // Must be inline to ensure the compiler has the full body available for constant propagation
+    stringifier* set_next(stringifier* const next_)
+    {
+      delete next;
+      next = next_;
+      return this;
+    }
+
+    stringifier* next;
   };
 
   /**
@@ -137,46 +158,45 @@ namespace AwesomeAssert
     {
     private:
       template <typename T>
-      static stringifier** create_expression_list(AWESOME_FWD_REF(T) val)
+      static stringifier* create_expression_list(AWESOME_FWD_REF(T) val)
       {
-        stringifier** const expr = new stringifier*[2];
-        expr[0] = expr[1] = NULL;
-        try
-        {
-          expr[0] = new string_maker<T>(AWESOME_FWD(T, val));
-          return expr;
-        }
-        catch (...)
-        {
-          delete [] expr;
-          throw;
-        }
+        return new string_maker<T>(AWESOME_FWD(T, val));
       }
 
       template <typename TL, typename TO, typename TR>
-      static stringifier** create_expression_list(AWESOME_FWD_REF(TL) lhs, const TO&, AWESOME_FWD_REF(TR) rhs)
+      static stringifier* create_expression_list(AWESOME_FWD_REF(TL) lhs, const TO&, AWESOME_FWD_REF(TR) rhs)
       {
-        stringifier** const expr = new stringifier*[4];
-        expr[0] = expr[1] = expr[2] = expr[3] = NULL;
+        // Constructing in reverse order because of the linked-list structure
+        stringifier* expr = new string_maker<TR>(AWESOME_FWD(TR, rhs));
         try
         {
-          expr[0] = new string_maker<TL>(AWESOME_FWD(TL, lhs));
-          expr[1] = new string_maker<TO>();
-          expr[2] = new string_maker<TR>(AWESOME_FWD(TR, rhs));
+          expr = (new string_maker<TO>)->set_next(expr);
+          expr = (new string_maker<TL>(AWESOME_FWD(TL, lhs)))->set_next(expr);
           return expr;
         }
         catch (...)
         {
-          delete expr[2];
-          delete expr[1];
-          delete expr[0];
-          delete [] expr;
+          delete expr;
           throw;
         }
       }
 
     public:
-      typedef stringifier const* const* const_iterator;
+      struct const_iterator : std::iterator<std::forward_iterator_tag, const stringifier>
+      {
+        const_iterator() AWESOME_NOEXCEPT;
+        const_iterator(const stringifier* cur_) AWESOME_NOEXCEPT;
+        const_iterator& operator++() AWESOME_NOEXCEPT;
+        const_iterator operator++(int) AWESOME_NOEXCEPT;
+        stringifier const& operator*() const AWESOME_NOEXCEPT;
+        stringifier const* operator->() const AWESOME_NOEXCEPT;
+        bool operator==(const const_iterator& rhs) const AWESOME_NOEXCEPT;
+        bool operator!=(const const_iterator& rhs) const AWESOME_NOEXCEPT;
+
+      private:
+        const stringifier* cur;
+      };
+
       typedef const_iterator iterator;
 
       template <typename T>
@@ -206,18 +226,16 @@ namespace AwesomeAssert
 
       void clear()
       {
-        for (stringifier** cur = fail_expression; cur && *cur; ++cur)
-        {
-          delete *cur;
-          *cur = NULL;
-        }
-        delete [] fail_expression;
+        delete fail_expression;
         fail_expression = NULL;
       }
 
       const_iterator begin() const;
       const_iterator end() const;
 
+      // Must be inline, along with all code that can potentially change fail_expression's value.
+      // This to ensure the compiler has the opportunity to determine that the asserted condition
+      // is equal to fail_expression not being NULL.
       operator bool() const
       {
         return !fail_expression;
@@ -255,7 +273,7 @@ namespace AwesomeAssert
       //! Storing string converters instead of strings to prevent inlining of conversion code.
       //! Either \c NULL or terminated with a \c NULL sentinel. This removes the need for a separate
       //! size field, which would increase code size for setting up and copying that field.
-      stringifier** fail_expression;
+      stringifier* fail_expression;
     };
 
     template <typename T>

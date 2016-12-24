@@ -28,7 +28,10 @@
 
 namespace AwesomeAssert {
 
-stringifier::~stringifier() {}
+stringifier::~stringifier()
+{
+  delete next;
+}
 
 template struct string_maker<bool>;
 template struct string_maker<short>;
@@ -112,10 +115,51 @@ namespace detail {
     {
       if (token != expr.begin())
         os << os.widen(' ');
-      os << (is_operator ? TColor::Yellow : TColor::Cyan) << **token;
+      os << (is_operator ? TColor::Yellow : TColor::Cyan) << *token;
       is_operator = !is_operator;
     }
     return os;
+  }
+
+  bool_expression::const_iterator::const_iterator() AWESOME_NOEXCEPT
+    : cur(NULL)
+  {}
+
+  bool_expression::const_iterator::const_iterator(const stringifier* cur_) AWESOME_NOEXCEPT
+    : cur(cur_)
+  {}
+
+  bool_expression::const_iterator& bool_expression::const_iterator::operator++() AWESOME_NOEXCEPT
+  {
+    cur = cur->next;
+    return *this;
+  }
+
+  bool_expression::const_iterator bool_expression::const_iterator::operator++(int) AWESOME_NOEXCEPT
+  {
+    const_iterator prev(*this);
+    ++*this;
+    return prev;
+  }
+
+  stringifier const& bool_expression::const_iterator::operator*() const AWESOME_NOEXCEPT
+  {
+    return *cur;
+  }
+
+  stringifier const* bool_expression::const_iterator::operator->() const AWESOME_NOEXCEPT
+  {
+    return cur;
+  }
+
+  bool bool_expression::const_iterator::operator==(const const_iterator& rhs) const AWESOME_NOEXCEPT
+  {
+    return !(this->cur != rhs.cur);
+  }
+
+  bool bool_expression::const_iterator::operator!=(const const_iterator& rhs) const AWESOME_NOEXCEPT
+  {
+    return this->cur != rhs.cur;
   }
 
   bool_expression::const_iterator bool_expression::begin() const
@@ -125,10 +169,7 @@ namespace detail {
 
   bool_expression::const_iterator bool_expression::end() const
   {
-    const_iterator cur = fail_expression;
-    while (cur && *cur)
-      ++cur;
-    return cur;
+    return const_iterator();
   }
 }
 
