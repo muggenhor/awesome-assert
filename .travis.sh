@@ -4,7 +4,8 @@ set -e
 set -x
 
 CTEST_OUTPUT_ON_FAILURE=ON
-export CTEST_OUTPUT_ON_FAILURE
+CMAKE_CXX_STANDARD_REQUIRED=ON
+export CTEST_OUTPUT_ON_FAILURE CMAKE_CXX_STANDARD_REQUIRED
 
 if [ "${ANALYZE}" -a "${CC}" = "clang" ]; then
   SCAN_BUILD_CMD="scan-build --use-cc=${CC} --use-c++=${CXX}"

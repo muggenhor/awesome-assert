@@ -14,6 +14,7 @@ compiler:
   - gcc
 env:
   - ANALYZE=1
-  - ANALYZE=
+  - CMAKE_CXX_STANDARD=98
+  - CMAKE_CXX_STANDARD=11
 script:
   - ./.travis.sh
