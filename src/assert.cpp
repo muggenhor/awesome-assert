@@ -54,12 +54,12 @@ template struct string_maker<const char*>;
 template struct string_maker<const signed char*>;
 template struct string_maker<const unsigned char*>;
 
-std::ostream& string_maker<detail::compare_eq>::convert(std::ostream& os) const { return os << "=="; };
-std::ostream& string_maker<detail::compare_ne>::convert(std::ostream& os) const { return os << "!="; };
-std::ostream& string_maker<detail::compare_lt>::convert(std::ostream& os) const { return os << "<" ; };
-std::ostream& string_maker<detail::compare_le>::convert(std::ostream& os) const { return os << "<="; };
-std::ostream& string_maker<detail::compare_gt>::convert(std::ostream& os) const { return os << ">" ; };
-std::ostream& string_maker<detail::compare_ge>::convert(std::ostream& os) const { return os << ">="; };
+std::ostream& string_maker<detail::compare_eq>::convert(std::ostream& os) const { return os << "=="; }
+std::ostream& string_maker<detail::compare_ne>::convert(std::ostream& os) const { return os << "!="; }
+std::ostream& string_maker<detail::compare_lt>::convert(std::ostream& os) const { return os << "<" ; }
+std::ostream& string_maker<detail::compare_le>::convert(std::ostream& os) const { return os << "<="; }
+std::ostream& string_maker<detail::compare_gt>::convert(std::ostream& os) const { return os << ">" ; }
+std::ostream& string_maker<detail::compare_ge>::convert(std::ostream& os) const { return os << ">="; }
 
 namespace
 {
@@ -72,7 +72,7 @@ namespace
       Cyan,
       Yellow,
       Grey,
-      Bright,
+      Bright
     };
   };
 
@@ -89,8 +89,7 @@ namespace
           case TColor::Yellow:      return os << "\033[22;33m";
           case TColor::Grey:        return os << "\033[1;30m";
           case TColor::Bright:      return os << "\033[1;39m";
-          case TColor::None:
-          default:                  return os << "\033[22;39m";
+          case TColor::None:        return os << "\033[22;39m";
       }
     }
 #endif

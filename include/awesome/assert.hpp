@@ -18,8 +18,8 @@
  *  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef __INCLUDED_AWESOME_ASSERT_HPP__
-#define __INCLUDED_AWESOME_ASSERT_HPP__
+#ifndef INCLUDED_AWESOME_ASSERT_HPP
+#define INCLUDED_AWESOME_ASSERT_HPP
 
 #include "awesome_export.h"
 #include <iosfwd>
@@ -377,4 +377,4 @@ namespace AwesomeAssert
 #undef AWESOME_FWD_REF
 #undef AWESOME_FWD
 
-#endif // __INCLUDED_AWESOME_ASSERT_HPP__
+#endif // INCLUDED_AWESOME_ASSERT_HPP
