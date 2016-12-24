@@ -97,7 +97,7 @@ namespace AwesomeAssert
   template <typename T>
   struct string_maker : stringifier
   {
-    string_maker(T val_)
+    explicit string_maker(T val_)
       : val(AWESOME_MOVE(val_))
     {}
 
@@ -223,7 +223,7 @@ namespace AwesomeAssert
       typedef const_iterator iterator;
 
       template <typename T>
-      bool_expression(AWESOME_FWD_REF(T) val)
+      explicit bool_expression(AWESOME_FWD_REF(T) val)
         : fail_expression(val ? NULL : create_expression_list(AWESOME_FWD(T, val)))
       {
       }

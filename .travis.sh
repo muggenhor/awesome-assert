@@ -11,7 +11,10 @@ if [ "${ANALYZE}" ]; then
   else
     cppcheck --template "{file}:{line}: {severity} ({id}): {message}" \
       --enable=style --force --std=c++11 -j 8 \
-      -I include src 2> build/cppcheck.txt
+      -U__FUNCSIG__ -U_MSC_VER \
+      -U__GNUC__ -U__clang__ \
+      -Iinclude \
+      src 2> build/cppcheck.txt
     if [ -s build/cppcheck.txt ]; then
       cat < build/cppcheck.txt >&2
       exit 1
