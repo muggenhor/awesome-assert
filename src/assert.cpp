@@ -28,7 +28,7 @@
 
 namespace AwesomeAssert {
 
-stringifier::~stringifier()
+stringifier::~stringifier() AWESOME_NOEXCEPT
 {
   delete next;
 }
@@ -162,12 +162,12 @@ namespace detail {
     return this->cur != rhs.cur;
   }
 
-  bool_expression::const_iterator bool_expression::begin() const
+  bool_expression::const_iterator bool_expression::begin() const AWESOME_NOEXCEPT
   {
     return fail_expression;
   }
 
-  bool_expression::const_iterator bool_expression::end() const
+  bool_expression::const_iterator bool_expression::end() const AWESOME_NOEXCEPT
   {
     return const_iterator();
   }

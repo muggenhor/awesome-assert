@@ -73,13 +73,13 @@ namespace AwesomeAssert
     stringifier() AWESOME_NOEXCEPT
       : next(NULL)
     {}
-    virtual ~stringifier();
+    virtual ~stringifier() AWESOME_NOEXCEPT;
     virtual std::ostream& convert(std::ostream& os) const = 0;
 
   private:
     friend struct detail::bool_expression;
     // Must be inline to ensure the compiler has the full body available for constant propagation
-    stringifier* set_next(stringifier* const next_)
+    stringifier* set_next(stringifier* const next_) AWESOME_NOEXCEPT
     {
       delete next;
       next = next_;
@@ -212,31 +212,31 @@ namespace AwesomeAssert
       {
       }
 
-      bool_expression(AWESOME_FWD_REF(bool_expression) rhs)
+      bool_expression(AWESOME_FWD_REF(bool_expression) rhs) AWESOME_NOEXCEPT
         : fail_expression(rhs.fail_expression)
       {
         // Const cast necessary because this is a stealing copy constructor when on C++98.
         const_cast<bool_expression&>(rhs).fail_expression = NULL;
       }
 
-      ~bool_expression()
+      ~bool_expression() AWESOME_NOEXCEPT
       {
         clear();
       }
 
-      void clear()
+      void clear() AWESOME_NOEXCEPT
       {
         delete fail_expression;
         fail_expression = NULL;
       }
 
-      const_iterator begin() const;
-      const_iterator end() const;
+      const_iterator begin() const AWESOME_NOEXCEPT;
+      const_iterator end() const AWESOME_NOEXCEPT;
 
       // Must be inline, along with all code that can potentially change fail_expression's value.
       // This to ensure the compiler has the opportunity to determine that the asserted condition
       // is equal to fail_expression not being NULL.
-      operator bool() const
+      operator bool() const AWESOME_NOEXCEPT
       {
         return !fail_expression;
       }
