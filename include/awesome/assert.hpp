@@ -18,8 +18,8 @@
  *  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef __INCLUDED_AWESOME_ASSERT_HPP__
-#define __INCLUDED_AWESOME_ASSERT_HPP__
+#ifndef INCLUDED_AWESOME_ASSERT_HPP
+#define INCLUDED_AWESOME_ASSERT_HPP
 
 #include "awesome_export.h"
 #include <iosfwd>
@@ -77,7 +77,7 @@ namespace AwesomeAssert
     virtual std::ostream& convert(std::ostream& os) const = 0;
 
   private:
-    friend class detail::bool_expression;
+    friend struct detail::bool_expression;
     stringifier* set_next(stringifier* const next_) AWESOME_NOEXCEPT
     {
       delete next;
@@ -109,6 +109,7 @@ namespace AwesomeAssert
     T val;
   };
 
+#if __cplusplus >= 201103L
   // Reduce potential for inlining
   extern template struct AWESOME_EXPORT string_maker<bool>;
   extern template struct AWESOME_EXPORT string_maker<short>;
@@ -130,6 +131,7 @@ namespace AwesomeAssert
   extern template struct AWESOME_EXPORT string_maker<const char*>;
   extern template struct AWESOME_EXPORT string_maker<const signed char*>;
   extern template struct AWESOME_EXPORT string_maker<const unsigned char*>;
+#endif
 
   namespace detail
   {
@@ -371,4 +373,4 @@ namespace AwesomeAssert
 #undef AWESOME_FWD_REF
 #undef AWESOME_FWD
 
-#endif // __INCLUDED_AWESOME_ASSERT_HPP__
+#endif // INCLUDED_AWESOME_ASSERT_HPP
