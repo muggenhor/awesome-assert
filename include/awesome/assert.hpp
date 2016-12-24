@@ -110,6 +110,7 @@ namespace AwesomeAssert
     T val;
   };
 
+#if __cplusplus >= 201103L
   // Reduce potential for inlining
   extern template struct AWESOME_EXPORT string_maker<bool>;
   extern template struct AWESOME_EXPORT string_maker<short>;
@@ -131,6 +132,7 @@ namespace AwesomeAssert
   extern template struct AWESOME_EXPORT string_maker<const char*>;
   extern template struct AWESOME_EXPORT string_maker<const signed char*>;
   extern template struct AWESOME_EXPORT string_maker<const unsigned char*>;
+#endif
 
   namespace detail
   {

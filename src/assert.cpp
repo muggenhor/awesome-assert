@@ -33,6 +33,7 @@ stringifier::~stringifier() AWESOME_NOEXCEPT
   delete next;
 }
 
+#if __cplusplus >= 201103L
 template struct string_maker<bool>;
 template struct string_maker<short>;
 template struct string_maker<unsigned short>;
@@ -53,6 +54,7 @@ template struct string_maker<unsigned char>;
 template struct string_maker<const char*>;
 template struct string_maker<const signed char*>;
 template struct string_maker<const unsigned char*>;
+#endif
 
 std::ostream& string_maker<detail::compare_eq>::convert(std::ostream& os) const { return os << "=="; }
 std::ostream& string_maker<detail::compare_ne>::convert(std::ostream& os) const { return os << "!="; }
