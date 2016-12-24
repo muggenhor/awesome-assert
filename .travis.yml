@@ -9,9 +9,11 @@ addons:
 compiler:
   - clang
   - gcc
+env:
+  - CTEST_OUTPUT_ON_FAILURE=ON
 before_script:
   - cmake -E make_directory build
 script:
-  - cmake -E chdir build cmake -DCMAKE_C_COMPILER=${CC} -DCMAKE_CXX_COMPILER=${CXX} ..
+  - cmake -E chdir build cmake ..
   - cmake --build build
-  - CTEST_OUTPUT_ON_FAILURE=ON cmake --build build --target test
+  - cmake --build build --target test
