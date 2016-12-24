@@ -2,7 +2,8 @@
 
 An assert implementation that aims to provide usable information while maintaining as small a performance footprint as possible when _not_ failing.
 
-[![Build Status](https://travis-ci.org/muggenhor/awesome-assert.svg?branch=master)](https://travis-ci.org/muggenhor/awesome-assert)
+ * Travis: [![Build Status](https://travis-ci.org/muggenhor/awesome-assert.svg?branch=master)](https://travis-ci.org/muggenhor/awesome-assert)
+ * AppVeyor: [![Build status](https://ci.appveyor.com/api/projects/status/x105d24o8x8hy4li/branch/master?svg=true)](https://ci.appveyor.com/project/muggenhor/awesome-assert/branch/master)
 
 ## Requirements
 
