@@ -1,0 +1,8 @@
+build_script:
+  - cmd: call "%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat" %PLATFORM%
+  - cmd: cmake -E make_directory build
+  - cmd: cmake -E chdir build cmake -G "NMake Makefiles" ..
+  - cmd: cmake --build build
+
+test_script:
+  - cmd: cmake --build build --target test
