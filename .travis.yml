@@ -2,16 +2,18 @@ language: cpp
 addons:
   apt:
     packages:
+      - clang # to get an updated version including scan-build
       - cmake
       - cmake-data
+      - cppcheck
+      - ninja-build
     sources:
       - george-edison55-precise-backports
 compiler:
   - clang
   - gcc
-before_script:
-  - cmake -E make_directory build
+env:
+  - CTEST_OUTPUT_ON_FAILURE=ON ANALYZE=1
+  - CTEST_OUTPUT_ON_FAILURE=ON ANALYZE=
 script:
-  - cmake -E chdir build cmake -DCMAKE_C_COMPILER=${CC} -DCMAKE_CXX_COMPILER=${CXX} ..
-  - cmake --build build
-  - CTEST_OUTPUT_ON_FAILURE=ON cmake --build build --target test
+  - ./.travis.sh
