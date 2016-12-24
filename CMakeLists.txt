@@ -86,7 +86,7 @@ add_executable(${PROJECT_NAME}.Test.simple
 )
 target_link_libraries(${PROJECT_NAME}.Test.simple PRIVATE AwesomeAssert)
 add_test(NAME ${PROJECT_NAME}.Test.simple.failure
-  COMMAND sh -c $<TARGET_FILE:${PROJECT_NAME}.Test.simple>
+  COMMAND sh -c "$<TARGET_FILE:${PROJECT_NAME}.Test.simple> && :"
 )
 add_test(NAME ${PROJECT_NAME}.Test.simple.success
   COMMAND ${PROJECT_NAME}.Test.simple 2 3 4 5

@@ -6,8 +6,8 @@ set -x
 cmake -E make_directory build
 if [ "${ANALYZE}" ]; then
   if [ "${CC}" = "clang" ]; then
-    scan-build cmake -E chdir build cmake -G Ninja ..
-    scan-build --status-bugs cmake --build build
+    scan-build --use-cc="${CC}" --use-c++="${CXX}" cmake -E chdir build cmake -G Ninja ..
+    scan-build --use-cc="${CC}" --use-c++="${CXX}" --status-bugs cmake --build build
   else
     cppcheck --template "{file}:{line}: {severity} ({id}): {message}" \
       --enable=style --force --std=c++11 -j 8 \
