@@ -19,6 +19,10 @@
 #
 
 cmake_minimum_required(VERSION 3.2)
+if(NOT CMAKE_VERSION VERSION_LESS 3.3)
+  # Apply VISIBILITY property to non-shared targets as well
+  cmake_policy(SET CMP0063 NEW)
+endif()
 
 project(AwesomeAssert)
 

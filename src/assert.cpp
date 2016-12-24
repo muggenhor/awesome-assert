@@ -91,8 +91,7 @@ namespace
           case TColor::Yellow:      return os << "\033[22;33m";
           case TColor::Grey:        return os << "\033[1;30m";
           case TColor::Bright:      return os << "\033[1;39m";
-          case TColor::None:
-                                    return os << "\033[22;39m";
+          case TColor::None:        return os << "\033[22;39m";
       }
     }
 #endif
@@ -123,6 +122,10 @@ namespace detail {
     return os;
   }
 
+  bool_expression::const_iterator::const_iterator() AWESOME_NOEXCEPT
+    : cur(NULL)
+  {}
+
   bool_expression::const_iterator::const_iterator(const stringifier* cur_) AWESOME_NOEXCEPT
     : cur(cur_)
   {}
@@ -152,12 +155,12 @@ namespace detail {
 
   bool bool_expression::const_iterator::operator==(const const_iterator& rhs) const AWESOME_NOEXCEPT
   {
-    return this->cur == rhs.cur;
+    return !(this->cur != rhs.cur);
   }
 
   bool bool_expression::const_iterator::operator!=(const const_iterator& rhs) const AWESOME_NOEXCEPT
   {
-    return !(this->cur == rhs.cur);
+    return this->cur != rhs.cur;
   }
 
   bool_expression::const_iterator bool_expression::begin() const AWESOME_NOEXCEPT
@@ -167,7 +170,7 @@ namespace detail {
 
   bool_expression::const_iterator bool_expression::end() const AWESOME_NOEXCEPT
   {
-    return NULL;
+    return const_iterator();
   }
 }
 

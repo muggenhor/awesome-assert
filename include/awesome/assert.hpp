@@ -78,6 +78,7 @@ namespace AwesomeAssert
 
   private:
     friend struct detail::bool_expression;
+    // Must be inline to ensure the compiler has the full body available for constant propagation
     stringifier* set_next(stringifier* const next_) AWESOME_NOEXCEPT
     {
       delete next;
@@ -167,10 +168,11 @@ namespace AwesomeAssert
       template <typename TL, typename TO, typename TR>
       static stringifier* create_expression_list(AWESOME_FWD_REF(TL) lhs, const TO&, AWESOME_FWD_REF(TR) rhs)
       {
+        // Constructing in reverse order because of the linked-list structure
         stringifier* expr = new string_maker<TR>(AWESOME_FWD(TR, rhs));
         try
         {
-          expr = (new string_maker<TO>())->set_next(expr);
+          expr = (new string_maker<TO>)->set_next(expr);
           expr = (new string_maker<TL>(AWESOME_FWD(TL, lhs)))->set_next(expr);
           return expr;
         }
@@ -184,7 +186,8 @@ namespace AwesomeAssert
     public:
       struct const_iterator : std::iterator<std::forward_iterator_tag, const stringifier>
       {
-        const_iterator(const stringifier* cur_ = NULL) AWESOME_NOEXCEPT;
+        const_iterator() AWESOME_NOEXCEPT;
+        const_iterator(const stringifier* cur_) AWESOME_NOEXCEPT;
         const_iterator& operator++() AWESOME_NOEXCEPT;
         const_iterator operator++(int) AWESOME_NOEXCEPT;
         stringifier const& operator*() const AWESOME_NOEXCEPT;
@@ -232,6 +235,9 @@ namespace AwesomeAssert
       const_iterator begin() const AWESOME_NOEXCEPT;
       const_iterator end() const AWESOME_NOEXCEPT;
 
+      // Must be inline, along with all code that can potentially change fail_expression's value.
+      // This to ensure the compiler has the opportunity to determine that the asserted condition
+      // is equal to fail_expression not being NULL.
       operator bool() const AWESOME_NOEXCEPT
       {
         return !fail_expression;
