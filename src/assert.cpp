@@ -30,7 +30,17 @@ namespace AwesomeAssert {
 
 stringifier::~stringifier() AWESOME_NOEXCEPT
 {
-  delete next;
+  while (next)
+  {
+    stringifier* const to_delete = next;
+
+    // Delete on next iteration
+    next = next->next;
+
+    // Prevent recursion of unknown depth in destructor calls
+    to_delete->next = NULL;
+    delete to_delete;
+  }
 }
 
 #if __cplusplus >= 201103L
