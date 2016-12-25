@@ -341,7 +341,7 @@ void assert_failed_precondition(
   , const char*                     function
   , const char*                     expr_str
   , detail::bool_expression         expr
-  ) AWESOME_NOEXCEPT
+  ) AWESOME_PRECONDITION_NOEXCEPT
 {
   assert_failed_default(file, line, function, expr_str, AWESOME_MOVE(expr));
 }
@@ -353,7 +353,7 @@ void assert_failed_invariant(
   , const char*                     function
   , const char*                     expr_str
   , detail::bool_expression         expr
-  ) AWESOME_NOEXCEPT
+  ) AWESOME_INVARIANT_NOEXCEPT
 {
   assert_failed_default(file, line, function, expr_str, AWESOME_MOVE(expr));
 }
@@ -365,7 +365,7 @@ void assert_failed_postcondition(
   , const char*                     function
   , const char*                     expr_str
   , detail::bool_expression         expr
-  ) AWESOME_NOEXCEPT
+  ) AWESOME_POSTCONDITION_NOEXCEPT
 {
   assert_failed_default(file, line, function, expr_str, AWESOME_MOVE(expr));
 }

@@ -33,6 +33,24 @@
   #define AWESOME_OVERRIDE
 #endif
 
+#ifndef AWESOME_PRECONDITION_NO_NOEXCEPT
+  #define AWESOME_PRECONDITION_NOEXCEPT AWESOME_NOEXCEPT
+#else
+  #define AWESOME_PRECONDITION_NOEXCEPT
+#endif
+
+#ifndef AWESOME_INVARIANT_NO_NOEXCEPT
+  #define AWESOME_INVARIANT_NOEXCEPT AWESOME_NOEXCEPT
+#else
+  #define AWESOME_INVARIANT_NOEXCEPT
+#endif
+
+#ifndef AWESOME_POSTCONDITION_NO_NOEXCEPT
+  #define AWESOME_POSTCONDITION_NOEXCEPT AWESOME_NOEXCEPT
+#else
+  #define AWESOME_POSTCONDITION_NOEXCEPT
+#endif
+
 #if   defined(_MSC_VER)
   #define AWESOME_NORETURN __declspec(noreturn)
 #elif defined(__GNUC__) || defined(__clang__)
@@ -376,7 +394,7 @@ namespace AwesomeAssert
     , const char*                     function
     , const char*                     expr_str
     , detail::bool_expression         expr
-    ) AWESOME_NOEXCEPT;
+    ) AWESOME_PRECONDITION_NOEXCEPT;
 
   AWESOME_NORETURN AWESOME_EXPORT
   void assert_failed_invariant(
@@ -385,7 +403,7 @@ namespace AwesomeAssert
     , const char*                     function
     , const char*                     expr_str
     , detail::bool_expression         expr
-    ) AWESOME_NOEXCEPT;
+    ) AWESOME_INVARIANT_NOEXCEPT;
 
   AWESOME_NORETURN AWESOME_EXPORT
   void assert_failed_postcondition(
@@ -394,7 +412,7 @@ namespace AwesomeAssert
     , const char*                     function
     , const char*                     expr_str
     , detail::bool_expression         expr
-    ) AWESOME_NOEXCEPT;
+    ) AWESOME_POSTCONDITION_NOEXCEPT;
 }
 
 #if defined(__GNUC__)
