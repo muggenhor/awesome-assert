@@ -20,6 +20,7 @@
 
 #include <awesome/assert.hpp>
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 
 #ifndef WIN32
@@ -93,12 +94,12 @@ template <> std::ostream& string_maker<const signed char*  >::convert(std::ostre
 template <> std::ostream& string_maker<const unsigned char*>::convert(std::ostream& os) const { return os << val; }
 #endif
 
-std::ostream& string_maker<detail::compare_eq>::convert(std::ostream& os) const { return os << "=="; }
-std::ostream& string_maker<detail::compare_ne>::convert(std::ostream& os) const { return os << "!="; }
-std::ostream& string_maker<detail::compare_lt>::convert(std::ostream& os) const { return os << "<" ; }
-std::ostream& string_maker<detail::compare_le>::convert(std::ostream& os) const { return os << "<="; }
-std::ostream& string_maker<detail::compare_gt>::convert(std::ostream& os) const { return os << ">" ; }
-std::ostream& string_maker<detail::compare_ge>::convert(std::ostream& os) const { return os << ">="; }
+const char* string_maker<detail::compare_eq>::str() const AWESOME_NOEXCEPT { return "=="; }
+const char* string_maker<detail::compare_ne>::str() const AWESOME_NOEXCEPT { return "!="; }
+const char* string_maker<detail::compare_lt>::str() const AWESOME_NOEXCEPT { return "<" ; }
+const char* string_maker<detail::compare_le>::str() const AWESOME_NOEXCEPT { return "<="; }
+const char* string_maker<detail::compare_gt>::str() const AWESOME_NOEXCEPT { return ">" ; }
+const char* string_maker<detail::compare_ge>::str() const AWESOME_NOEXCEPT { return ">="; }
 
 namespace
 {
@@ -135,6 +136,57 @@ namespace
 
     return os;
   }
+
+  class expression_colorizer
+  {
+  public:
+    expression_colorizer(const char* const expr_str, const detail::bool_expression& expr)
+      : _lhs(expr_str)
+      , _end(expr_str + strlen(expr_str))
+      , _op(_end)
+      , _rhs(_end)
+    {
+      using namespace std;
+
+      for (detail::bool_expression::const_iterator token = expr.begin(); token != expr.end(); ++token)
+      {
+        const detail::string_maker_op* const op = dynamic_cast<const detail::string_maker_op*>(&*token);
+        if (!op)
+          continue;
+
+        // Multiple operators found in the expression: don't even try to separate them
+        if (_op != _end)
+        {
+          _rhs = _op = _end;
+          return;
+        }
+
+        const char* const op_str = op->str();
+        _op = strstr(_lhs, op_str);
+        if (!_op)
+        {
+          _op = _end;
+          continue;
+        }
+
+        _rhs = _op + strlen(op_str);
+      }
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const expression_colorizer& expr)
+    {
+      (os << TColor::Cyan  ).write(expr._lhs, expr._op  - expr._lhs);
+      (os << TColor::Yellow).write(expr._op , expr._rhs - expr._op );
+      (os << TColor::Cyan  ).write(expr._rhs, expr._end - expr._rhs);
+      return os << TColor::None;
+    }
+
+  private:
+    const char* _lhs;
+    const char* _end;
+    const char* _op;
+    const char* _rhs;
+  };
 }
 
 static std::ostream& operator<<(std::ostream& os, const stringifier& str)
@@ -143,6 +195,11 @@ static std::ostream& operator<<(std::ostream& os, const stringifier& str)
 }
 
 namespace detail {
+  std::ostream& string_maker_op::convert(std::ostream& os) const
+  {
+    return os << this->str();
+  }
+
   static std::ostream& operator<<(std::ostream& os, const bool_expression& expr)
   {
     if (expr.begin() == expr.end())
@@ -224,7 +281,7 @@ void assert_fail_default_log(
   cerr << boolalpha
     << TColor::Bright << file << ":" << line << ": " << function << ": "
     << TColor::Grey   << "Assertion `"
-    << TColor::Cyan   << expr_str
+                      << expression_colorizer(expr_str, expr)
     << TColor::None   << "', with expansion `"
                       << expr
     << TColor::None   << "', "

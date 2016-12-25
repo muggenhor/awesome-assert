@@ -166,14 +166,21 @@ namespace AwesomeAssert
     struct compare_le { template <class TL, class TR> bool operator()(const TL& lhs, const TR& rhs) const { return lhs <= rhs; } };
     struct compare_gt { template <class TL, class TR> bool operator()(const TL& lhs, const TR& rhs) const { return lhs >  rhs; } };
     struct compare_ge { template <class TL, class TR> bool operator()(const TL& lhs, const TR& rhs) const { return lhs >= rhs; } };
+
+    //! Internal marker type in the hierarchy for retrieving operators
+    struct AWESOME_EXPORT string_maker_op : stringifier
+    {
+      virtual std::ostream& convert(std::ostream& os) const AWESOME_OVERRIDE;
+      virtual const char* str() const AWESOME_NOEXCEPT = 0;
+    };
   }
 
-  template <> struct AWESOME_EXPORT string_maker<detail::compare_eq> : stringifier { virtual std::ostream& convert(std::ostream& os) const AWESOME_OVERRIDE; };
-  template <> struct AWESOME_EXPORT string_maker<detail::compare_ne> : stringifier { virtual std::ostream& convert(std::ostream& os) const AWESOME_OVERRIDE; };
-  template <> struct AWESOME_EXPORT string_maker<detail::compare_lt> : stringifier { virtual std::ostream& convert(std::ostream& os) const AWESOME_OVERRIDE; };
-  template <> struct AWESOME_EXPORT string_maker<detail::compare_le> : stringifier { virtual std::ostream& convert(std::ostream& os) const AWESOME_OVERRIDE; };
-  template <> struct AWESOME_EXPORT string_maker<detail::compare_gt> : stringifier { virtual std::ostream& convert(std::ostream& os) const AWESOME_OVERRIDE; };
-  template <> struct AWESOME_EXPORT string_maker<detail::compare_ge> : stringifier { virtual std::ostream& convert(std::ostream& os) const AWESOME_OVERRIDE; };
+  template <> struct AWESOME_EXPORT string_maker<detail::compare_eq> : detail::string_maker_op { virtual const char* str() const AWESOME_NOEXCEPT AWESOME_OVERRIDE; };
+  template <> struct AWESOME_EXPORT string_maker<detail::compare_ne> : detail::string_maker_op { virtual const char* str() const AWESOME_NOEXCEPT AWESOME_OVERRIDE; };
+  template <> struct AWESOME_EXPORT string_maker<detail::compare_lt> : detail::string_maker_op { virtual const char* str() const AWESOME_NOEXCEPT AWESOME_OVERRIDE; };
+  template <> struct AWESOME_EXPORT string_maker<detail::compare_le> : detail::string_maker_op { virtual const char* str() const AWESOME_NOEXCEPT AWESOME_OVERRIDE; };
+  template <> struct AWESOME_EXPORT string_maker<detail::compare_gt> : detail::string_maker_op { virtual const char* str() const AWESOME_NOEXCEPT AWESOME_OVERRIDE; };
+  template <> struct AWESOME_EXPORT string_maker<detail::compare_ge> : detail::string_maker_op { virtual const char* str() const AWESOME_NOEXCEPT AWESOME_OVERRIDE; };
 
   namespace detail
   {
