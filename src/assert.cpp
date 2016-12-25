@@ -119,17 +119,18 @@ namespace
   std::ostream& operator<<(std::ostream& os, TColor::TCode color)
   {
 #if _XOPEN_VERSION >= 700 || _POSIX_VERSION >= 200112L
-    if ((os.rdbuf() == std::cout.rdbuf() && isatty(STDOUT_FILENO))
-     || (os.rdbuf() == std::cerr.rdbuf() && isatty(STDERR_FILENO)))
+    if (os.good()
+     && ((os.rdbuf() == std::cout.rdbuf() && isatty(STDOUT_FILENO))
+      || (os.rdbuf() == std::cerr.rdbuf() && isatty(STDERR_FILENO))))
     {
       switch (color)
       {
-          case TColor::Red:         return os << "\033[22;31m";
-          case TColor::Cyan:        return os << "\033[22;36m";
-          case TColor::Yellow:      return os << "\033[22;33m";
-          case TColor::Grey:        return os << "\033[1;30m";
-          case TColor::Bright:      return os << "\033[1;39m";
-          case TColor::None:        return os << "\033[22;39m";
+          case TColor::Red:         return os.write("\033[22;31m", 8);
+          case TColor::Cyan:        return os.write("\033[22;36m", 8);
+          case TColor::Yellow:      return os.write("\033[22;33m", 8);
+          case TColor::Grey:        return os.write("\033[1;30m", 7);
+          case TColor::Bright:      return os.write("\033[1;39m", 7);
+          case TColor::None:        return os.write("\033[22;39m", 8);
       }
     }
 #endif
@@ -175,9 +176,17 @@ namespace
 
     friend std::ostream& operator<<(std::ostream& os, const expression_colorizer& expr)
     {
-      (os << TColor::Cyan  ).write(expr._lhs, expr._op  - expr._lhs);
-      (os << TColor::Yellow).write(expr._op , expr._rhs - expr._op );
-      (os << TColor::Cyan  ).write(expr._rhs, expr._end - expr._rhs);
+      os << TColor::Cyan;
+      if (os.good())
+        os.write(expr._lhs, expr._op  - expr._lhs);
+
+      os << TColor::Yellow;
+      if (os.good())
+        os.write(expr._op , expr._rhs - expr._op );
+
+      os << TColor::Cyan;
+      if (os.good())
+        os.write(expr._rhs, expr._end - expr._rhs);
       return os << TColor::None;
     }
 
@@ -203,17 +212,24 @@ namespace detail {
   static std::ostream& operator<<(std::ostream& os, const bool_expression& expr)
   {
     if (expr.begin() == expr.end())
-      return os << TColor::Cyan << true;
+    {
+      os << TColor::Cyan;
+      if (os.good())
+        os << true;
+    }
 
     bool is_operator = false;
-    for (bool_expression::const_iterator token = expr.begin(); token != expr.end(); ++token)
+    for (bool_expression::const_iterator token = expr.begin(); token != expr.end() && os.good(); ++token)
     {
       if (token != expr.begin())
-        os << os.widen(' ');
-      os << (is_operator ? TColor::Yellow : TColor::Cyan) << *token;
+        os << os.fill();
+      os << (is_operator ? TColor::Yellow : TColor::Cyan);
+      if (os.good())
+        os << *token;
       is_operator = !is_operator;
     }
-    return os;
+
+    return os << TColor::None;
   }
 
   bool_expression::const_iterator::const_iterator() AWESOME_NOEXCEPT
@@ -282,9 +298,9 @@ void assert_fail_default_log(
     << TColor::Bright << file << ":" << line << ": " << function << ": "
     << TColor::Grey   << "Assertion `"
                       << expression_colorizer(expr_str, expr)
-    << TColor::None   << "', with expansion `"
+                      << "', with expansion `"
                       << expr
-    << TColor::None   << "', "
+                      << "', "
     << TColor::Red    << "failed"
     << TColor::None   << "."
     << endl // Using 'endl' instead of "\n" because we need its flush.
