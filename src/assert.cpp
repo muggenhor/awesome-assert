@@ -296,7 +296,8 @@ void assert_fail_default_log(
 
   cerr << boolalpha
     << TColor::Bright << file << ":" << line << ": " << function << ": "
-    << TColor::Grey   << "Assertion `"
+    << TColor::Grey   << "Assertion"
+    << TColor::None   << " `"
                       << expression_colorizer(expr_str, expr)
                       << "', with expansion `"
                       << expr
