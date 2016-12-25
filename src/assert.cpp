@@ -26,6 +26,12 @@
   #include <unistd.h>
 #endif
 
+#ifdef __GNUC__
+  #define AWESOME_ATTR_WEAK __attribute__((__weak__))
+#else
+  #define AWESOME_ATTR_WEAK
+#endif
+
 namespace AwesomeAssert {
 
 stringifier::~stringifier() AWESOME_NOEXCEPT
@@ -205,32 +211,89 @@ namespace detail {
   }
 }
 
-#ifdef __GNUC__
-__attribute__((__weak__))
-#endif
-void assert_failed(const char* file, int line, const char* function, const char* expr_str, detail::bool_expression in_expr) AWESOME_NOEXCEPT
+void assert_fail_default_log(
+    const char*                     file
+  , int                             line
+  , const char*                     function
+  , const char*                     expr_str
+  , const detail::bool_expression&  expr
+  ) AWESOME_NOEXCEPT
 {
+  using namespace std;
+
+  cerr << boolalpha
+    << TColor::Bright << file << ":" << line << ": " << function << ": "
+    << TColor::Grey   << "Assertion `"
+    << TColor::Cyan   << expr_str
+    << TColor::None   << "', with expansion `"
+                      << expr
+    << TColor::None   << "', "
+    << TColor::Red    << "failed"
+    << TColor::None   << "."
+    << endl // Using 'endl' instead of "\n" because we need its flush.
+    ;
+}
+
+namespace
+{
+  AWESOME_NORETURN
+  void assert_failed_default(
+      const char*                     file
+    , int                             line
+    , const char*                     function
+    , const char*                     expr_str
+    , detail::bool_expression         in_expr
+    ) AWESOME_NOEXCEPT
   {
+    // To get abort(), regardless of which namespace it's in.
     using namespace std;
 
-    // Prevent memory leak detectors from complaining about our memory (abort() prevents destructors
-    // from running), by ensuring this gets destroyed as soon as we leave this scope.
-    detail::bool_expression expr(AWESOME_MOVE(in_expr));
+    {
+      // Prevent memory leak detectors from complaining about our memory (abort() prevents destructors
+      // from running), by ensuring this gets destroyed as soon as we leave this scope.
+      detail::bool_expression expr(AWESOME_MOVE(in_expr));
 
-    cerr << boolalpha
-      << TColor::Bright << file << ":" << line << ": " << function << ": "
-      << TColor::Grey   << "Assertion `"
-      << TColor::Cyan   << expr_str
-      << TColor::None   << "', with expansion `"
-                        << expr
-      << TColor::None   << "', "
-      << TColor::Red    << "failed"
-      << TColor::None   << "."
-      << endl // Using 'endl' instead of "\n" because we need its flush.
-      ;
+      assert_fail_default_log(file, line, function, expr_str, expr);
+    }
+
+    abort();
   }
+}
 
-  abort();
+AWESOME_ATTR_WEAK
+void assert_failed_precondition(
+    const char*                     file
+  , int                             line
+  , const char*                     function
+  , const char*                     expr_str
+  , detail::bool_expression         expr
+  ) AWESOME_NOEXCEPT
+{
+  assert_failed_default(file, line, function, expr_str, AWESOME_MOVE(expr));
+}
+
+AWESOME_ATTR_WEAK
+void assert_failed_invariant(
+    const char*                     file
+  , int                             line
+  , const char*                     function
+  , const char*                     expr_str
+  , detail::bool_expression         expr
+  ) AWESOME_NOEXCEPT
+{
+  assert_failed_default(file, line, function, expr_str, AWESOME_MOVE(expr));
+}
+
+AWESOME_ATTR_WEAK
+void assert_failed_postcondition(
+    const char*                     file
+  , int                             line
+  , const char*                     function
+  , const char*                     expr_str
+  , detail::bool_expression         expr
+  ) AWESOME_NOEXCEPT
+{
+  assert_failed_default(file, line, function, expr_str, AWESOME_MOVE(expr));
 }
 
 }

@@ -349,8 +349,41 @@ namespace AwesomeAssert
    * asserted condition is met.  The \c noexcept tells the compiler it doesn't have to produce stack unwinding
    * information for exceptions, giving another optimisation opportunity.
    */
+  AWESOME_EXPORT
+  void assert_fail_default_log(
+      const char*                     file
+    , int                             line
+    , const char*                     function
+    , const char*                     expr_str
+    , const detail::bool_expression&  expr
+    ) AWESOME_NOEXCEPT;
+
   AWESOME_NORETURN AWESOME_EXPORT
-  void assert_failed(const char* file, int line, const char* function, const char* expr_str, detail::bool_expression expr) AWESOME_NOEXCEPT;
+  void assert_failed_precondition(
+      const char*                     file
+    , int                             line
+    , const char*                     function
+    , const char*                     expr_str
+    , detail::bool_expression         expr
+    ) AWESOME_NOEXCEPT;
+
+  AWESOME_NORETURN AWESOME_EXPORT
+  void assert_failed_invariant(
+      const char*                     file
+    , int                             line
+    , const char*                     function
+    , const char*                     expr_str
+    , detail::bool_expression         expr
+    ) AWESOME_NOEXCEPT;
+
+  AWESOME_NORETURN AWESOME_EXPORT
+  void assert_failed_postcondition(
+      const char*                     file
+    , int                             line
+    , const char*                     function
+    , const char*                     expr_str
+    , detail::bool_expression         expr
+    ) AWESOME_NOEXCEPT;
 }
 
 #if defined(__GNUC__)
@@ -369,28 +402,31 @@ namespace AwesomeAssert
 # define AWESOME_FUNCTION __FUNCTION__
 #endif
 
-#define AWESOME_ASSERT_IMPL(expr) \
+#define AWESOME_ASSERT_IMPL(fail_func, expr) \
   do { \
     ::AwesomeAssert::detail::bool_expression evalExpr(::AwesomeAssert::detail::expression_decomposer() << expr); \
     if (AWESOME_UNLIKELY(!evalExpr)) \
     { \
-      ::AwesomeAssert::assert_failed(__FILE__, __LINE__, AWESOME_FUNCTION, #expr, AWESOME_MOVE(evalExpr)); \
+      fail_func(__FILE__, __LINE__, AWESOME_FUNCTION, #expr, AWESOME_MOVE(evalExpr)); \
     } \
   } while (0)
 
 #ifdef __clang__
-  #define AWESOME_ASSERT(expr) \
+  #define AWESOME_ASSERT_PROXY(fail_func, expr) \
     do { \
       _Pragma("clang diagnostic push") \
       _Pragma("clang diagnostic ignored \"-Woverloaded-shift-op-parentheses\"") \
-      AWESOME_ASSERT_IMPL(expr); \
+      AWESOME_ASSERT_IMPL(fail_func, expr); \
       _Pragma("clang diagnostic pop") \
     } while (0)
 #else
-  #define AWESOME_ASSERT(expr) AWESOME_ASSERT_IMPL(expr)
+  #define AWESOME_ASSERT_PROXY(fail_func, expr) AWESOME_ASSERT_IMPL(fail_func, expr)
 #endif
 
-#undef AWESOME_NORETURN
+#define AWESOME_EXPECTS(expr) AWESOME_ASSERT_PROXY(::AwesomeAssert::assert_failed_precondition , expr)
+#define AWESOME_ASSERT(expr)  AWESOME_ASSERT_PROXY(::AwesomeAssert::assert_failed_invariant    , expr)
+#define AWESOME_ENSURES(expr) AWESOME_ASSERT_PROXY(::AwesomeAssert::assert_failed_postcondition, expr)
+
 #undef AWESOME_FWD_REF
 #undef AWESOME_FWD
 
