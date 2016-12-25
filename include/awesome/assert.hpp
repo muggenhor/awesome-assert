@@ -89,6 +89,8 @@ namespace AwesomeAssert
     stringifier* next;
   };
 
+  AWESOME_EXPORT std::ostream& operator<<(std::ostream& os, const stringifier& str);
+
   /**
    * \brief String converter helper template class.
    *
@@ -299,6 +301,8 @@ namespace AwesomeAssert
       //! size field, which would increase code size for setting up and copying that field.
       stringifier* fail_expression;
     };
+
+    AWESOME_EXPORT std::ostream& operator<<(std::ostream& os, const bool_expression& expr);
 
     template <typename T>
     struct expression_lhs

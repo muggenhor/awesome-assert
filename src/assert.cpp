@@ -50,6 +50,11 @@ stringifier::~stringifier() AWESOME_NOEXCEPT
   }
 }
 
+std::ostream& operator<<(std::ostream& os, const stringifier& str)
+{
+  return str.convert(os);
+}
+
 #if __cplusplus >= 201103L
 template struct string_maker<bool>;
 template struct string_maker<short>;
@@ -198,18 +203,13 @@ namespace
   };
 }
 
-static std::ostream& operator<<(std::ostream& os, const stringifier& str)
-{
-  return str.convert(os);
-}
-
 namespace detail {
   std::ostream& string_maker_op::convert(std::ostream& os) const
   {
     return os << this->str();
   }
 
-  static std::ostream& operator<<(std::ostream& os, const bool_expression& expr)
+  std::ostream& operator<<(std::ostream& os, const bool_expression& expr)
   {
     if (expr.begin() == expr.end())
     {
