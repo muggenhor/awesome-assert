@@ -52,6 +52,15 @@ set_target_properties(
     VISIBILITY_INLINES_HIDDEN ON
     CXX_VISIBILITY_PRESET hidden
 )
+if(CMAKE_CXX_COMPILER_ID MATCHES "[Cc]lang")
+  # Stop Clang from whining about infinite recursion in the noexcept operator in assert_failed_precondition.
+  # The expression given to that operator is never allowed to be evaluated at runtime, so no recursion happens at all.
+  set_source_files_properties(
+      src/assert.cpp
+    PROPERTIES
+      COMPILE_FLAGS -Wno-infinite-recursion
+  )
+endif()
 
 include(GenerateExportHeader)
 
