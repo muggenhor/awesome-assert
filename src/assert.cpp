@@ -309,24 +309,41 @@ namespace detail
   }
 }
 
-std::ostream& assert_fail_default_log(
-    std::ostream&                   os
-  , const char*                     file
+violation_info::violation_info() AWESOME_NOEXCEPT
+  : line_number(-1)
+  , file_name(NULL)
+  , function_name(NULL)
+  , comment(NULL)
+  , expression(true /* aka no failure */)
+{
+}
+
+violation_info::violation_info(
+    const char*                     file
   , int                             line
   , const char*                     function
   , const char*                     expr_str
-  , const detail::bool_expression&  expr
+  , detail::bool_expression         expr
   ) AWESOME_NOEXCEPT
+  : line_number(line)
+  , file_name(file)
+  , function_name(function)
+  , comment(expr_str)
+  , expression(AWESOME_MOVE(expr))
+{
+}
+
+std::ostream& assert_fail_default_log(std::ostream& os, const violation_info& info) AWESOME_NOEXCEPT
 {
   const std::ios_base::fmtflags flags(os.flags());
 
   os << std::boolalpha
-    << TColor::Bright << file << ":" << line << ": " << function << ": "
+    << TColor::Bright << info.file_name << ":" << info.line_number << ": " << info.function_name << ": "
     << TColor::Grey   << "Assertion"
     << TColor::None   << " `"
-                      << expression_colorizer(expr_str, expr)
+                      << expression_colorizer(info.comment, info.expression)
                       << "', with expansion `"
-                      << expr
+                      << info.expression
                       << "', "
     << TColor::Red    << "failed"
     << TColor::None   << ".\n"
@@ -335,15 +352,9 @@ std::ostream& assert_fail_default_log(
   return os;
 }
 
-void assert_fail_default_log(
-    const char*                     file
-  , int                             line
-  , const char*                     function
-  , const char*                     expr_str
-  , const detail::bool_expression&  expr
-  ) AWESOME_NOEXCEPT
+void assert_fail_default_log(const violation_info& info) AWESOME_NOEXCEPT
 {
-  assert_fail_default_log(std::cerr, file, line, function, expr_str, expr)
+  assert_fail_default_log(std::cerr, info)
     // Must flush() because we're likely to terminate after this
     .flush();
 }
@@ -351,13 +362,7 @@ void assert_fail_default_log(
 namespace
 {
   AWESOME_NORETURN
-  void assert_failed_default(
-      const char*                     file
-    , int                             line
-    , const char*                     function
-    , const char*                     expr_str
-    , detail::bool_expression         in_expr
-    ) AWESOME_NOEXCEPT
+  void assert_failed_default(violation_info in_info) AWESOME_NOEXCEPT
   {
     // To get abort(), regardless of which namespace it's in.
     using namespace std;
@@ -365,9 +370,9 @@ namespace
     {
       // Prevent memory leak detectors from complaining about our memory (abort() prevents destructors
       // from running), by ensuring this gets destroyed as soon as we leave this scope.
-      detail::bool_expression expr(AWESOME_MOVE(in_expr));
+      violation_info info(AWESOME_MOVE(in_info));
 
-      assert_fail_default_log(file, line, function, expr_str, expr);
+      assert_fail_default_log(info);
     }
 
     abort();
@@ -383,7 +388,7 @@ void assert_failed_precondition(
   , detail::bool_expression         expr
   ) AWESOME_PRECONDITION_NOEXCEPT
 {
-  assert_failed_default(file, line, function, expr_str, AWESOME_MOVE(expr));
+  assert_failed_default(violation_info(file, line, function, expr_str, AWESOME_MOVE(expr)));
 }
 
 AWESOME_ATTR_WEAK
@@ -395,7 +400,7 @@ void assert_failed_invariant(
   , detail::bool_expression         expr
   ) AWESOME_INVARIANT_NOEXCEPT
 {
-  assert_failed_default(file, line, function, expr_str, AWESOME_MOVE(expr));
+  assert_failed_default(violation_info(file, line, function, expr_str, AWESOME_MOVE(expr)));
 }
 
 AWESOME_ATTR_WEAK
@@ -407,7 +412,7 @@ void assert_failed_postcondition(
   , detail::bool_expression         expr
   ) AWESOME_POSTCONDITION_NOEXCEPT
 {
-  assert_failed_default(file, line, function, expr_str, AWESOME_MOVE(expr));
+  assert_failed_default(violation_info(file, line, function, expr_str, AWESOME_MOVE(expr)));
 }
 
 }

@@ -371,28 +371,47 @@ namespace AwesomeAssert
     };
   }
 
+  struct AWESOME_EXPORT violation_info
+  {
+    violation_info() AWESOME_NOEXCEPT;
+    violation_info(
+        const char*                     file
+      , int                             line
+      , const char*                     function
+      , const char*                     expr_str
+      , detail::bool_expression         expr
+      ) AWESOME_NOEXCEPT;
+    violation_info(AWESOME_FWD_REF(violation_info) rhs) AWESOME_NOEXCEPT
+      : line_number  (rhs.line_number  )
+      , file_name    (rhs.file_name    )
+      , function_name(rhs.function_name)
+      , comment      (rhs.comment      )
+      , expression   (AWESOME_MOVE(rhs.expression))
+    {
+    }
+
+
+    int                     line_number;
+    const char*             file_name;
+    const char*             function_name;
+    const char*             comment;
+    detail::bool_expression expression;
+  };
+
   AWESOME_EXPORT
   std::ostream& assert_fail_default_log(
       std::ostream&                   os
-    , const char*                     file
-    , int                             line
-    , const char*                     function
-    , const char*                     expr_str
-    , const detail::bool_expression&  expr
+    , const violation_info&           info
     ) AWESOME_NOEXCEPT;
 
   AWESOME_EXPORT
   void assert_fail_default_log(
-      const char*                     file
-    , int                             line
-    , const char*                     function
-    , const char*                     expr_str
-    , const detail::bool_expression&  expr
+      const violation_info&           info
     ) AWESOME_NOEXCEPT;
 
   /**
    * \brief Handlers for assert failures.
-   * 
+   *
    * These functions are \c noreturn to permit the compiler to optimize the remaining code with the certainty that the
    * asserted condition is met.  The \c noexcept tells the compiler it doesn't have to produce stack unwinding
    * information for exceptions, giving another optimisation opportunity.
@@ -466,7 +485,6 @@ namespace AwesomeAssert
 #define AWESOME_ASSERT(expr)  AWESOME_ASSERT_PROXY(::AwesomeAssert::assert_failed_invariant    , expr)
 #define AWESOME_ENSURES(expr) AWESOME_ASSERT_PROXY(::AwesomeAssert::assert_failed_postcondition, expr)
 
-#undef AWESOME_FWD_REF
 #undef AWESOME_FWD
 
 #endif // INCLUDED_AWESOME_ASSERT_HPP
