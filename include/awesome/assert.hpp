@@ -24,6 +24,7 @@
 #include "awesome_export.h"
 #include <iosfwd>
 #include <iterator>
+#include <stdexcept>
 
 #if __cplusplus >= 201103L
   #define AWESOME_NOEXCEPT noexcept
@@ -396,6 +397,17 @@ namespace AwesomeAssert
     const char*             function_name;
     const char*             comment;
     detail::bool_expression expression;
+  };
+
+  class AWESOME_EXPORT precondition_error : public std::invalid_argument
+  {
+  public:
+    precondition_error(violation_info info);
+
+    friend AWESOME_EXPORT std::ostream& operator<<(std::ostream& os, const precondition_error& error);
+
+  private:
+    violation_info _info;
   };
 
   AWESOME_EXPORT

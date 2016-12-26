@@ -22,6 +22,8 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <sstream>
+#include <string>
 
 #if __GLIBCXX__
   #include <ext/stdio_sync_filebuf.h>
@@ -333,6 +335,27 @@ violation_info::violation_info(
 {
 }
 
+namespace
+{
+  std::string assert_fail_to_string(const violation_info& info)
+  {
+    std::ostringstream os;
+    assert_fail_default_log(os, info);
+    return os.str();
+  }
+}
+
+precondition_error::precondition_error(violation_info info)
+  : std::invalid_argument(assert_fail_to_string(info))
+  , _info(AWESOME_MOVE(info))
+{
+}
+
+std::ostream& operator<<(std::ostream& os, const precondition_error& error)
+{
+  return assert_fail_default_log(os, error._info);
+}
+
 std::ostream& assert_fail_default_log(std::ostream& os, const violation_info& info) AWESOME_NOEXCEPT
 {
   const std::ios_base::fmtflags flags(os.flags());
@@ -388,7 +411,18 @@ void assert_failed_precondition(
   , detail::bool_expression         expr
   ) AWESOME_PRECONDITION_NOEXCEPT
 {
-  assert_failed_default(violation_info(file, line, function, expr_str, AWESOME_MOVE(expr)));
+  violation_info info(file, line, function, expr_str, AWESOME_MOVE(expr));
+
+#if __cplusplus >= 201103L
+  if (noexcept(assert_failed_precondition(file, line, function, expr_str, AWESOME_MOVE(expr))))
+    assert_failed_default(AWESOME_MOVE(info));
+#endif
+
+#ifndef AWESOME_PRECONDITION_NO_NOEXCEPT
+  assert_failed_default(AWESOME_MOVE(info));
+#else
+  throw precondition_error(AWESOME_MOVE(info));
+#endif
 }
 
 AWESOME_ATTR_WEAK
