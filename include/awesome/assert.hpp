@@ -205,7 +205,7 @@ namespace AwesomeAssert
 
   namespace detail
   {
-    struct bool_expression
+    struct AWESOME_EXPORT bool_expression
     {
     private:
       template <typename T>
@@ -233,7 +233,7 @@ namespace AwesomeAssert
       }
 
     public:
-      struct const_iterator : std::iterator<std::forward_iterator_tag, const stringifier>
+      struct AWESOME_NO_EXPORT const_iterator : std::iterator<std::forward_iterator_tag, const stringifier>
       {
         const_iterator() AWESOME_NOEXCEPT;
         const_iterator(const stringifier* cur_) AWESOME_NOEXCEPT;
@@ -275,8 +275,8 @@ namespace AwesomeAssert
         delete fail_expression;
       }
 
-      const_iterator begin() const AWESOME_NOEXCEPT;
-      const_iterator end() const AWESOME_NOEXCEPT;
+      AWESOME_NO_EXPORT const_iterator begin() const AWESOME_NOEXCEPT;
+      AWESOME_NO_EXPORT const_iterator end() const AWESOME_NOEXCEPT;
 
       // Must be inline, along with all code that can potentially change fail_expression's value.
       // This to ensure the compiler has the opportunity to determine that the asserted condition
