@@ -399,6 +399,13 @@ namespace AwesomeAssert
     detail::bool_expression expression;
   };
 
+#ifdef _MSC_VER
+  // Apparently MSVC's C++ library doesn't properly DLL export it's std::exception hierarchy. It's warning about
+  // exporting our exception class that derives from that without exporting the base. Nothing we can do about it, so
+  // just ignore and hope for the best.
+#pragma warning(push)
+#pragma warning(disable:4275)
+#endif
   class AWESOME_EXPORT precondition_error : public std::invalid_argument
   {
   public:
@@ -409,6 +416,9 @@ namespace AwesomeAssert
   private:
     violation_info _info;
   };
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
   AWESOME_EXPORT
   std::ostream& assert_fail_default_log(
