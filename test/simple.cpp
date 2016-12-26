@@ -22,5 +22,5 @@
 
 int main(int argc, char**)
 {
-  AWESOME_ASSERT(argc >= 10 - argc);
+  AWESOME_EXPECTS(argc >= 10 - argc);
 }
