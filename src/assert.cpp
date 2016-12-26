@@ -23,6 +23,10 @@
 #include <cstring>
 #include <iostream>
 
+#if __GLIBCXX__
+  #include <ext/stdio_sync_filebuf.h>
+#endif
+
 #ifndef WIN32
   #include <unistd.h>
 #endif
@@ -123,10 +127,30 @@ namespace
 
   std::ostream& operator<<(std::ostream& os, TColor::TCode color)
   {
+    if (!os
+     || !os.rdbuf())
+      return os;
+
 #if _XOPEN_VERSION >= 700 || _POSIX_VERSION >= 200112L
-    if (os.good()
-     && ((os.rdbuf() == std::cout.rdbuf() && isatty(STDOUT_FILENO))
-      || (os.rdbuf() == std::cerr.rdbuf() && isatty(STDERR_FILENO))))
+    bool is_a_tty = false;
+#if __GLIBCXX__
+    // Support for glibc++: query the actual file-descriptor, can work for other things than stdout/stderr too
+    if (__gnu_cxx::stdio_sync_filebuf<char>* rdbuf = dynamic_cast<__gnu_cxx::stdio_sync_filebuf<char>*>(os.rdbuf()))
+    {
+      is_a_tty = rdbuf->file() && isatty(fileno(rdbuf->file()));
+    }
+#elif _LIBCPP_VERSION
+    // NOTE: the same isn't possible for Clang/libc++ because it hides the RTTI required to perform a dynamic_cast
+    //       to std::__stdoutbuf<char> from its dynamic symbol table. (The lacking private access is something that
+    //       could be worked around in a standards-compliant way, this cannot.)
+#endif
+
+    is_a_tty = is_a_tty
+     || (os.rdbuf() == std::cout.rdbuf() && isatty(STDOUT_FILENO))
+     || (os.rdbuf() == std::cerr.rdbuf() && isatty(STDERR_FILENO))
+     ;
+
+    if (is_a_tty)
     {
       switch (color)
       {

@@ -18,7 +18,7 @@ if [ "${CPPCHECK}" ]; then
   cppcheck --template "{file}:{line}: {severity} ({id}): {message}" \
     --enable=style --force --std=c++11 -j 8 \
     -U__FUNCSIG__ -U_MSC_VER \
-    -U__GNUC__ -U__clang__ \
+    -U__GNUC__ -U__clang__ -U__GLIBCXX__ -U_LIBCPP_VERSION \
     -Iinclude -Ibuild/include/awesome \
     src 2> build/cppcheck.txt
   if [ -s build/cppcheck.txt ]; then
