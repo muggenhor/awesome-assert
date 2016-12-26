@@ -203,7 +203,8 @@ namespace
   };
 }
 
-namespace detail {
+namespace detail
+{
   std::ostream& string_maker_op::convert(std::ostream& os) const
   {
     return os << this->str();
@@ -284,17 +285,18 @@ namespace detail {
   }
 }
 
-void assert_fail_default_log(
-    const char*                     file
+std::ostream& assert_fail_default_log(
+    std::ostream&                   os
+  , const char*                     file
   , int                             line
   , const char*                     function
   , const char*                     expr_str
   , const detail::bool_expression&  expr
   ) AWESOME_NOEXCEPT
 {
-  using namespace std;
+  const std::ios_base::fmtflags flags(os.flags());
 
-  cerr << boolalpha
+  os << std::boolalpha
     << TColor::Bright << file << ":" << line << ": " << function << ": "
     << TColor::Grey   << "Assertion"
     << TColor::None   << " `"
@@ -303,9 +305,23 @@ void assert_fail_default_log(
                       << expr
                       << "', "
     << TColor::Red    << "failed"
-    << TColor::None   << "."
-    << endl // Using 'endl' instead of "\n" because we need its flush.
+    << TColor::None   << ".\n"
     ;
+  os.flags(flags);
+  return os;
+}
+
+void assert_fail_default_log(
+    const char*                     file
+  , int                             line
+  , const char*                     function
+  , const char*                     expr_str
+  , const detail::bool_expression&  expr
+  ) AWESOME_NOEXCEPT
+{
+  assert_fail_default_log(std::cerr, file, line, function, expr_str, expr)
+    // Must flush() because we're likely to terminate after this
+    .flush();
 }
 
 namespace

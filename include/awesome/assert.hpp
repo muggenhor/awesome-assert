@@ -371,13 +371,16 @@ namespace AwesomeAssert
     };
   }
 
-  /**
-   * \brief Handler for assert failures.
-   * 
-   * This function is \c noreturn to permit the compiler to optimize the remaining code with the certainty that the
-   * asserted condition is met.  The \c noexcept tells the compiler it doesn't have to produce stack unwinding
-   * information for exceptions, giving another optimisation opportunity.
-   */
+  AWESOME_EXPORT
+  std::ostream& assert_fail_default_log(
+      std::ostream&                   os
+    , const char*                     file
+    , int                             line
+    , const char*                     function
+    , const char*                     expr_str
+    , const detail::bool_expression&  expr
+    ) AWESOME_NOEXCEPT;
+
   AWESOME_EXPORT
   void assert_fail_default_log(
       const char*                     file
@@ -387,6 +390,13 @@ namespace AwesomeAssert
     , const detail::bool_expression&  expr
     ) AWESOME_NOEXCEPT;
 
+  /**
+   * \brief Handlers for assert failures.
+   * 
+   * These functions are \c noreturn to permit the compiler to optimize the remaining code with the certainty that the
+   * asserted condition is met.  The \c noexcept tells the compiler it doesn't have to produce stack unwinding
+   * information for exceptions, giving another optimisation opportunity.
+   */
   AWESOME_NORETURN AWESOME_EXPORT
   void assert_failed_precondition(
       const char*                     file
