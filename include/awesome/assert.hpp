@@ -27,27 +27,25 @@
 #include <stdexcept>
 
 #if __cplusplus >= 201103L
-  #define AWESOME_NOEXCEPT noexcept
   #define AWESOME_OVERRIDE override
 #else
-  #define AWESOME_NOEXCEPT throw()
   #define AWESOME_OVERRIDE
 #endif
 
 #ifndef AWESOME_PRECONDITION_NO_NOEXCEPT
-  #define AWESOME_PRECONDITION_NOEXCEPT AWESOME_NOEXCEPT
+  #define AWESOME_PRECONDITION_NOEXCEPT noexcept
 #else
   #define AWESOME_PRECONDITION_NOEXCEPT
 #endif
 
 #ifndef AWESOME_INVARIANT_NO_NOEXCEPT
-  #define AWESOME_INVARIANT_NOEXCEPT AWESOME_NOEXCEPT
+  #define AWESOME_INVARIANT_NOEXCEPT noexcept
 #else
   #define AWESOME_INVARIANT_NOEXCEPT
 #endif
 
 #ifndef AWESOME_POSTCONDITION_NO_NOEXCEPT
-  #define AWESOME_POSTCONDITION_NOEXCEPT AWESOME_NOEXCEPT
+  #define AWESOME_POSTCONDITION_NOEXCEPT noexcept
 #else
   #define AWESOME_POSTCONDITION_NOEXCEPT
 #endif
@@ -56,27 +54,18 @@
   #define AWESOME_NORETURN __declspec(noreturn)
 #elif defined(__GNUC__) || defined(__clang__)
   #define AWESOME_NORETURN __attribute__ ((__noreturn__))
-#elif __cplusplus >= 201103L
-  // Unfortunately some versions of GCC with -std=c++0x claim to be C++11
+#else
+  // Unfortunately some versions of GCC (4.7) with -std=c++0x claim to be C++11
   // without supporting either attributes or the [[noreturn]] attribute. Which
   // is why we're using GCC's own __noreturn__ attribute above first.
   #define AWESOME_NORETURN [[noreturn]]
-#else
-  #define AWESOME_NORETURN
 #endif
 
-#if __cplusplus >= 201103L
-  #include <utility>
-  #define AWESOME_FWD_REF(T) T&&
-  #define AWESOME_MOVE(x) std::move(x)
-  #define AWESOME_FWD(T, x) std::forward<T>(x)
-  #define AWESOME_REMOVE_REF(T) typename std::remove_reference<T>::type
+#include <utility>
+
+#if !defined(__GNUC__) || __GNUC__ > 4 || __GNUC_MINOR__ > 7
   #define AWESOME_RREF_OR_CONST &&
 #else
-  #define AWESOME_FWD_REF(T) const T&
-  #define AWESOME_MOVE(x) x
-  #define AWESOME_FWD(T, x) x
-  #define AWESOME_REMOVE_REF(T) T
   #define AWESOME_RREF_OR_CONST const
 #endif
 
@@ -89,16 +78,16 @@ namespace AwesomeAssert
 
   struct AWESOME_EXPORT stringifier
   {
-    stringifier() AWESOME_NOEXCEPT
-      : next(NULL)
+    stringifier() noexcept
+      : next(nullptr)
     {}
-    virtual ~stringifier() AWESOME_NOEXCEPT;
+    virtual ~stringifier() noexcept;
     virtual std::ostream& convert(std::ostream& os) const = 0;
 
   private:
     friend struct detail::bool_expression;
     // Must be inline to ensure the compiler has the full body available for constant propagation
-    stringifier* set_next(stringifier* const next_) AWESOME_NOEXCEPT
+    stringifier* set_next(stringifier* const next_) noexcept
     {
       delete next;
       next = next_;
@@ -119,7 +108,7 @@ namespace AwesomeAssert
   struct string_maker : stringifier
   {
     explicit string_maker(T val_)
-      : val(AWESOME_MOVE(val_))
+      : val(std::move(val_))
     {}
 
     virtual std::ostream& convert(std::ostream& os) const AWESOME_OVERRIDE
@@ -132,7 +121,6 @@ namespace AwesomeAssert
   };
 
   // Reduce amount of code needing to be duplicated across object files
-#if __cplusplus >= 201103L
   extern template struct AWESOME_EXPORT string_maker<bool>;
   extern template struct AWESOME_EXPORT string_maker<short>;
   extern template struct AWESOME_EXPORT string_maker<unsigned short>;
@@ -153,28 +141,6 @@ namespace AwesomeAssert
   extern template struct AWESOME_EXPORT string_maker<const char*>;
   extern template struct AWESOME_EXPORT string_maker<const signed char*>;
   extern template struct AWESOME_EXPORT string_maker<const unsigned char*>;
-#else
-  template <> AWESOME_EXPORT std::ostream& string_maker<bool                >::convert(std::ostream&) const;
-  template <> AWESOME_EXPORT std::ostream& string_maker<short               >::convert(std::ostream&) const;
-  template <> AWESOME_EXPORT std::ostream& string_maker<unsigned short      >::convert(std::ostream&) const;
-  template <> AWESOME_EXPORT std::ostream& string_maker<int                 >::convert(std::ostream&) const;
-  template <> AWESOME_EXPORT std::ostream& string_maker<unsigned int        >::convert(std::ostream&) const;
-  template <> AWESOME_EXPORT std::ostream& string_maker<long                >::convert(std::ostream&) const;
-  template <> AWESOME_EXPORT std::ostream& string_maker<unsigned long       >::convert(std::ostream&) const;
-  template <> AWESOME_EXPORT std::ostream& string_maker<long long           >::convert(std::ostream&) const;
-  template <> AWESOME_EXPORT std::ostream& string_maker<unsigned long long  >::convert(std::ostream&) const;
-  template <> AWESOME_EXPORT std::ostream& string_maker<float               >::convert(std::ostream&) const;
-  template <> AWESOME_EXPORT std::ostream& string_maker<double              >::convert(std::ostream&) const;
-  template <> AWESOME_EXPORT std::ostream& string_maker<long double         >::convert(std::ostream&) const;
-  template <> AWESOME_EXPORT std::ostream& string_maker<void*               >::convert(std::ostream&) const;
-  template <> AWESOME_EXPORT std::ostream& string_maker<const void*         >::convert(std::ostream&) const;
-  template <> AWESOME_EXPORT std::ostream& string_maker<char                >::convert(std::ostream&) const;
-  template <> AWESOME_EXPORT std::ostream& string_maker<signed char         >::convert(std::ostream&) const;
-  template <> AWESOME_EXPORT std::ostream& string_maker<unsigned char       >::convert(std::ostream&) const;
-  template <> AWESOME_EXPORT std::ostream& string_maker<const char*         >::convert(std::ostream&) const;
-  template <> AWESOME_EXPORT std::ostream& string_maker<const signed char*  >::convert(std::ostream&) const;
-  template <> AWESOME_EXPORT std::ostream& string_maker<const unsigned char*>::convert(std::ostream&) const;
-#endif
 
   namespace detail
   {
@@ -192,16 +158,16 @@ namespace AwesomeAssert
     struct AWESOME_EXPORT string_maker_op : stringifier
     {
       virtual std::ostream& convert(std::ostream& os) const AWESOME_OVERRIDE;
-      virtual const char* str() const AWESOME_NOEXCEPT = 0;
+      virtual const char* str() const noexcept = 0;
     };
   }
 
-  template <> struct AWESOME_EXPORT string_maker<detail::compare_eq> : detail::string_maker_op { virtual const char* str() const AWESOME_NOEXCEPT AWESOME_OVERRIDE; };
-  template <> struct AWESOME_EXPORT string_maker<detail::compare_ne> : detail::string_maker_op { virtual const char* str() const AWESOME_NOEXCEPT AWESOME_OVERRIDE; };
-  template <> struct AWESOME_EXPORT string_maker<detail::compare_lt> : detail::string_maker_op { virtual const char* str() const AWESOME_NOEXCEPT AWESOME_OVERRIDE; };
-  template <> struct AWESOME_EXPORT string_maker<detail::compare_le> : detail::string_maker_op { virtual const char* str() const AWESOME_NOEXCEPT AWESOME_OVERRIDE; };
-  template <> struct AWESOME_EXPORT string_maker<detail::compare_gt> : detail::string_maker_op { virtual const char* str() const AWESOME_NOEXCEPT AWESOME_OVERRIDE; };
-  template <> struct AWESOME_EXPORT string_maker<detail::compare_ge> : detail::string_maker_op { virtual const char* str() const AWESOME_NOEXCEPT AWESOME_OVERRIDE; };
+  template <> struct AWESOME_EXPORT string_maker<detail::compare_eq> : detail::string_maker_op { virtual const char* str() const noexcept AWESOME_OVERRIDE; };
+  template <> struct AWESOME_EXPORT string_maker<detail::compare_ne> : detail::string_maker_op { virtual const char* str() const noexcept AWESOME_OVERRIDE; };
+  template <> struct AWESOME_EXPORT string_maker<detail::compare_lt> : detail::string_maker_op { virtual const char* str() const noexcept AWESOME_OVERRIDE; };
+  template <> struct AWESOME_EXPORT string_maker<detail::compare_le> : detail::string_maker_op { virtual const char* str() const noexcept AWESOME_OVERRIDE; };
+  template <> struct AWESOME_EXPORT string_maker<detail::compare_gt> : detail::string_maker_op { virtual const char* str() const noexcept AWESOME_OVERRIDE; };
+  template <> struct AWESOME_EXPORT string_maker<detail::compare_ge> : detail::string_maker_op { virtual const char* str() const noexcept AWESOME_OVERRIDE; };
 
   namespace detail
   {
@@ -209,20 +175,20 @@ namespace AwesomeAssert
     {
     private:
       template <typename T>
-      static stringifier* create_expression_list(AWESOME_FWD_REF(T) val)
+      static stringifier* create_expression_list(T&& val)
       {
-        return new string_maker<T>(AWESOME_FWD(T, val));
+        return new string_maker<T>(std::forward<T>(val));
       }
 
       template <typename TL, typename TO, typename TR>
-      static stringifier* create_expression_list(AWESOME_FWD_REF(TL) lhs, const TO&, AWESOME_FWD_REF(TR) rhs)
+      static stringifier* create_expression_list(TL&& lhs, TO&&, TR&& rhs)
       {
         // Constructing in reverse order because of the linked-list structure
-        stringifier* expr = new string_maker<TR>(AWESOME_FWD(TR, rhs));
+        stringifier* expr = new string_maker<TR>(std::forward<TR>(rhs));
         try
         {
           expr = (new string_maker<TO>)->set_next(expr);
-          expr = (new string_maker<TL>(AWESOME_FWD(TL, lhs)))->set_next(expr);
+          expr = (new string_maker<TL>(std::forward<TL>(lhs)))->set_next(expr);
           return expr;
         }
         catch (...)
@@ -235,14 +201,14 @@ namespace AwesomeAssert
     public:
       struct AWESOME_EXPORT const_iterator : std::iterator<std::forward_iterator_tag, const stringifier>
       {
-        const_iterator() AWESOME_NOEXCEPT;
-        const_iterator(const stringifier* cur_) AWESOME_NOEXCEPT;
-        const_iterator& operator++() AWESOME_NOEXCEPT;
-        const_iterator operator++(int) AWESOME_NOEXCEPT;
-        stringifier const& operator*() const AWESOME_NOEXCEPT;
-        stringifier const* operator->() const AWESOME_NOEXCEPT;
-        bool operator==(const const_iterator& rhs) const AWESOME_NOEXCEPT;
-        bool operator!=(const const_iterator& rhs) const AWESOME_NOEXCEPT;
+        const_iterator() noexcept;
+        const_iterator(const stringifier* cur_) noexcept;
+        const_iterator& operator++() noexcept;
+        const_iterator operator++(int) noexcept;
+        stringifier const& operator*() const noexcept;
+        stringifier const* operator->() const noexcept;
+        bool operator==(const const_iterator& rhs) const noexcept;
+        bool operator!=(const const_iterator& rhs) const noexcept;
 
       private:
         const stringifier* cur;
@@ -251,42 +217,39 @@ namespace AwesomeAssert
       typedef const_iterator iterator;
 
       template <typename T>
-      explicit bool_expression(AWESOME_FWD_REF(T) val)
-        : fail_expression(val ? NULL : create_expression_list(AWESOME_FWD(T, val)))
+      explicit bool_expression(T&& val)
+        : fail_expression(val ? nullptr : create_expression_list(std::forward<T>(val)))
       {
       }
 
       template <typename TL, typename TO, typename TR>
-      bool_expression(
-          AWESOME_FWD_REF(TL) lhs, AWESOME_FWD_REF(TO) op, AWESOME_FWD_REF(TR) rhs)
-        : fail_expression(op(lhs, rhs) ? NULL : create_expression_list(AWESOME_FWD(TL, lhs), AWESOME_FWD(TO, op), AWESOME_FWD(TR, rhs)))
+      bool_expression(TL&& lhs, TO&& op, TR&& rhs)
+        : fail_expression(op(lhs, rhs) ? nullptr : create_expression_list(std::forward<TL>(lhs), std::forward<TO>(op), std::forward<TR>(rhs)))
       {
       }
 
-      bool_expression(AWESOME_FWD_REF(bool_expression) rhs) AWESOME_NOEXCEPT
+      bool_expression(bool_expression&& rhs) noexcept
         : fail_expression(rhs.fail_expression)
       {
-        // Const cast necessary because this is a stealing copy constructor when on C++98.
-        const_cast<bool_expression&>(rhs).fail_expression = NULL;
+        rhs.fail_expression = nullptr;
       }
 
-      ~bool_expression() AWESOME_NOEXCEPT
+      ~bool_expression() noexcept
       {
         delete fail_expression;
       }
 
-      const_iterator begin() const AWESOME_NOEXCEPT;
-      const_iterator end() const AWESOME_NOEXCEPT;
+      const_iterator begin() const noexcept;
+      const_iterator end() const noexcept;
 
       // Must be inline, along with all code that can potentially change fail_expression's value.
       // This to ensure the compiler has the opportunity to determine that the asserted condition
       // is equal to fail_expression not being NULL.
-      operator bool() const AWESOME_NOEXCEPT
+      explicit operator bool() const noexcept
       {
         return !fail_expression;
       }
 
-#if __cplusplus >= 201103L
     private:
       template <typename>
       struct TFalse
@@ -312,7 +275,6 @@ namespace AwesomeAssert
       template <typename R> int operator&= (const R&) { static_assert(TFalse<R>::val, "Expression too complex: rewrite as binary comparison"); return int(); }
       template <typename R> int operator^= (const R&) { static_assert(TFalse<R>::val, "Expression too complex: rewrite as binary comparison"); return int(); }
       template <typename R> int operator|= (const R&) { static_assert(TFalse<R>::val, "Expression too complex: rewrite as binary comparison"); return int(); }
-#endif
 
     private:
       //! Storing string converters instead of strings to prevent inlining of conversion code.
@@ -327,36 +289,34 @@ namespace AwesomeAssert
     struct expression_lhs
     {
       expression_lhs(T lhs_)
-        : lhs(AWESOME_MOVE(lhs_))
+        : lhs(std::move(lhs_))
       {}
 
       // For unary expressions
-      operator bool_expression() AWESOME_RREF_OR_CONST { return bool_expression(AWESOME_MOVE(lhs)); }
+      operator bool_expression() AWESOME_RREF_OR_CONST { return bool_expression(std::move(lhs)); }
 
-      template <class R> bool_expression operator==(AWESOME_FWD_REF(R) rhs) AWESOME_RREF_OR_CONST { return bool_expression(AWESOME_MOVE(lhs), compare_eq(), AWESOME_FWD(R, rhs)); }
-      template <class R> bool_expression operator!=(AWESOME_FWD_REF(R) rhs) AWESOME_RREF_OR_CONST { return bool_expression(AWESOME_MOVE(lhs), compare_ne(), AWESOME_FWD(R, rhs)); }
-      template <class R> bool_expression operator< (AWESOME_FWD_REF(R) rhs) AWESOME_RREF_OR_CONST { return bool_expression(AWESOME_MOVE(lhs), compare_lt(), AWESOME_FWD(R, rhs)); }
-      template <class R> bool_expression operator<=(AWESOME_FWD_REF(R) rhs) AWESOME_RREF_OR_CONST { return bool_expression(AWESOME_MOVE(lhs), compare_le(), AWESOME_FWD(R, rhs)); }
-      template <class R> bool_expression operator> (AWESOME_FWD_REF(R) rhs) AWESOME_RREF_OR_CONST { return bool_expression(AWESOME_MOVE(lhs), compare_gt(), AWESOME_FWD(R, rhs)); }
-      template <class R> bool_expression operator>=(AWESOME_FWD_REF(R) rhs) AWESOME_RREF_OR_CONST { return bool_expression(AWESOME_MOVE(lhs), compare_ge(), AWESOME_FWD(R, rhs)); }
+      template <class R> bool_expression operator==(R&& rhs) AWESOME_RREF_OR_CONST { return bool_expression(std::move(lhs), compare_eq(), std::forward<R>(rhs)); }
+      template <class R> bool_expression operator!=(R&& rhs) AWESOME_RREF_OR_CONST { return bool_expression(std::move(lhs), compare_ne(), std::forward<R>(rhs)); }
+      template <class R> bool_expression operator< (R&& rhs) AWESOME_RREF_OR_CONST { return bool_expression(std::move(lhs), compare_lt(), std::forward<R>(rhs)); }
+      template <class R> bool_expression operator<=(R&& rhs) AWESOME_RREF_OR_CONST { return bool_expression(std::move(lhs), compare_le(), std::forward<R>(rhs)); }
+      template <class R> bool_expression operator> (R&& rhs) AWESOME_RREF_OR_CONST { return bool_expression(std::move(lhs), compare_gt(), std::forward<R>(rhs)); }
+      template <class R> bool_expression operator>=(R&& rhs) AWESOME_RREF_OR_CONST { return bool_expression(std::move(lhs), compare_ge(), std::forward<R>(rhs)); }
 
-#if __cplusplus >= 201103L
       // Necessary to permit usage of these in expressions. They should be allowed because they
       // have higher precedence than comparison operators, but they're not without this because we
       // use left shift in expression_decomposer.
       template <typename R>
-      auto operator<<(AWESOME_FWD_REF(R) rhs) AWESOME_RREF_OR_CONST
-        -> expression_lhs<decltype(T() << AWESOME_FWD(R, rhs))>
+      auto operator<<(R&& rhs) AWESOME_RREF_OR_CONST
+        -> expression_lhs<decltype(T() << std::forward<R>(rhs))>
       {
-        return AWESOME_MOVE(lhs) << AWESOME_FWD(R, rhs);
+        return std::move(lhs) << std::forward<R>(rhs);
       }
       template <typename R>
-      auto operator>>(AWESOME_FWD_REF(R) rhs) AWESOME_RREF_OR_CONST
-        -> expression_lhs<decltype(T() >> AWESOME_FWD(R, rhs))>
+      auto operator>>(R&& rhs) AWESOME_RREF_OR_CONST
+        -> expression_lhs<decltype(T() >> std::forward<R>(rhs))>
       {
-        return AWESOME_MOVE(lhs) >> AWESOME_FWD(R, rhs);
+        return std::move(lhs) >> std::forward<R>(rhs);
       }
-#endif
 
     private:
       T lhs;
@@ -365,29 +325,29 @@ namespace AwesomeAssert
     struct expression_decomposer
     {
       template <typename T>
-      expression_lhs<AWESOME_REMOVE_REF(T)> operator<<(AWESOME_FWD_REF(T) lhs)
+      expression_lhs<typename std::remove_reference<T>::type> operator<<(T&& lhs)
       {
-        return expression_lhs<AWESOME_REMOVE_REF(T)>(AWESOME_FWD(T, lhs));
+        return expression_lhs<typename std::remove_reference<T>::type>(std::forward<T>(lhs));
       }
     };
   }
 
   struct AWESOME_EXPORT violation_info
   {
-    violation_info() AWESOME_NOEXCEPT;
+    violation_info() noexcept;
     violation_info(
         const char*                     file
       , int                             line
       , const char*                     function
       , const char*                     expr_str
       , detail::bool_expression         expr
-      ) AWESOME_NOEXCEPT;
-    violation_info(AWESOME_FWD_REF(violation_info) rhs) AWESOME_NOEXCEPT
+      ) noexcept;
+    violation_info(violation_info&& rhs) noexcept
       : line_number  (rhs.line_number  )
       , file_name    (rhs.file_name    )
       , function_name(rhs.function_name)
       , comment      (rhs.comment      )
-      , expression   (AWESOME_MOVE(rhs.expression))
+      , expression   (std::move(rhs.expression))
     {
     }
 
@@ -424,12 +384,12 @@ namespace AwesomeAssert
   std::ostream& assert_fail_default_log(
       std::ostream&                   os
     , const violation_info&           info
-    ) AWESOME_NOEXCEPT;
+    ) noexcept;
 
   AWESOME_EXPORT
   void assert_fail_default_log(
       const violation_info&           info
-    ) AWESOME_NOEXCEPT;
+    ) noexcept;
 
   /**
    * \brief Handlers for assert failures.
@@ -476,10 +436,8 @@ namespace AwesomeAssert
 # define AWESOME_FUNCTION __PRETTY_FUNCTION__
 #elif defined(__FUNCSIG__)
 # define AWESOME_FUNCTION __FUNCSIG__
-#elif __cplusplus >= 201103
-# define AWESOME_FUNCTION __func__
 #else
-# define AWESOME_FUNCTION __FUNCTION__
+# define AWESOME_FUNCTION __func__
 #endif
 
 #define AWESOME_ASSERT_IMPL(fail_func, expr) \
@@ -487,7 +445,7 @@ namespace AwesomeAssert
     ::AwesomeAssert::detail::bool_expression evalExpr(::AwesomeAssert::detail::expression_decomposer() << expr); \
     if (AWESOME_UNLIKELY(!evalExpr)) \
     { \
-      fail_func(__FILE__, __LINE__, AWESOME_FUNCTION, #expr, AWESOME_MOVE(evalExpr)); \
+      fail_func(__FILE__, __LINE__, AWESOME_FUNCTION, #expr, std::move(evalExpr)); \
     } \
   } while (0)
 
@@ -506,7 +464,5 @@ namespace AwesomeAssert
 #define AWESOME_EXPECTS(expr) AWESOME_ASSERT_PROXY(::AwesomeAssert::assert_failed_precondition , expr)
 #define AWESOME_ASSERT(expr)  AWESOME_ASSERT_PROXY(::AwesomeAssert::assert_failed_invariant    , expr)
 #define AWESOME_ENSURES(expr) AWESOME_ASSERT_PROXY(::AwesomeAssert::assert_failed_postcondition, expr)
-
-#undef AWESOME_FWD
 
 #endif // INCLUDED_AWESOME_ASSERT_HPP

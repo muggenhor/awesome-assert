@@ -41,7 +41,7 @@
 
 namespace AwesomeAssert {
 
-stringifier::~stringifier() AWESOME_NOEXCEPT
+stringifier::~stringifier() noexcept
 {
   while (next)
   {
@@ -51,7 +51,7 @@ stringifier::~stringifier() AWESOME_NOEXCEPT
     next = next->next;
 
     // Prevent recursion of unknown depth in destructor calls
-    to_delete->next = NULL;
+    to_delete->next = nullptr;
     delete to_delete;
   }
 }
@@ -61,7 +61,6 @@ std::ostream& operator<<(std::ostream& os, const stringifier& str)
   return str.convert(os);
 }
 
-#if __cplusplus >= 201103L
 template struct string_maker<bool>;
 template struct string_maker<short>;
 template struct string_maker<unsigned short>;
@@ -82,52 +81,27 @@ template struct string_maker<unsigned char>;
 template struct string_maker<const char*>;
 template struct string_maker<const signed char*>;
 template struct string_maker<const unsigned char*>;
-#else
-template <> std::ostream& string_maker<bool                >::convert(std::ostream& os) const { return os << val; }
-template <> std::ostream& string_maker<short               >::convert(std::ostream& os) const { return os << val; }
-template <> std::ostream& string_maker<unsigned short      >::convert(std::ostream& os) const { return os << val; }
-template <> std::ostream& string_maker<int                 >::convert(std::ostream& os) const { return os << val; }
-template <> std::ostream& string_maker<unsigned int        >::convert(std::ostream& os) const { return os << val; }
-template <> std::ostream& string_maker<long                >::convert(std::ostream& os) const { return os << val; }
-template <> std::ostream& string_maker<unsigned long       >::convert(std::ostream& os) const { return os << val; }
-template <> std::ostream& string_maker<long long           >::convert(std::ostream& os) const { return os << val; }
-template <> std::ostream& string_maker<unsigned long long  >::convert(std::ostream& os) const { return os << val; }
-template <> std::ostream& string_maker<float               >::convert(std::ostream& os) const { return os << val; }
-template <> std::ostream& string_maker<double              >::convert(std::ostream& os) const { return os << val; }
-template <> std::ostream& string_maker<long double         >::convert(std::ostream& os) const { return os << val; }
-template <> std::ostream& string_maker<void*               >::convert(std::ostream& os) const { return os << val; }
-template <> std::ostream& string_maker<const void*         >::convert(std::ostream& os) const { return os << val; }
-template <> std::ostream& string_maker<char                >::convert(std::ostream& os) const { return os << val; }
-template <> std::ostream& string_maker<signed char         >::convert(std::ostream& os) const { return os << val; }
-template <> std::ostream& string_maker<unsigned char       >::convert(std::ostream& os) const { return os << val; }
-template <> std::ostream& string_maker<const char*         >::convert(std::ostream& os) const { return os << val; }
-template <> std::ostream& string_maker<const signed char*  >::convert(std::ostream& os) const { return os << val; }
-template <> std::ostream& string_maker<const unsigned char*>::convert(std::ostream& os) const { return os << val; }
-#endif
 
-const char* string_maker<detail::compare_eq>::str() const AWESOME_NOEXCEPT { return "=="; }
-const char* string_maker<detail::compare_ne>::str() const AWESOME_NOEXCEPT { return "!="; }
-const char* string_maker<detail::compare_lt>::str() const AWESOME_NOEXCEPT { return "<" ; }
-const char* string_maker<detail::compare_le>::str() const AWESOME_NOEXCEPT { return "<="; }
-const char* string_maker<detail::compare_gt>::str() const AWESOME_NOEXCEPT { return ">" ; }
-const char* string_maker<detail::compare_ge>::str() const AWESOME_NOEXCEPT { return ">="; }
+const char* string_maker<detail::compare_eq>::str() const noexcept { return "=="; }
+const char* string_maker<detail::compare_ne>::str() const noexcept { return "!="; }
+const char* string_maker<detail::compare_lt>::str() const noexcept { return "<" ; }
+const char* string_maker<detail::compare_le>::str() const noexcept { return "<="; }
+const char* string_maker<detail::compare_gt>::str() const noexcept { return ">" ; }
+const char* string_maker<detail::compare_ge>::str() const noexcept { return ">="; }
 
 namespace
 {
-  struct TColor
+  enum class TColor
   {
-    enum TCode
-    {
-      None,
-      Red,
-      Cyan,
-      Yellow,
-      Grey,
-      Bright
-    };
+    None,
+    Red,
+    Cyan,
+    Yellow,
+    Grey,
+    Bright
   };
 
-  std::ostream& operator<<(std::ostream& os, TColor::TCode color)
+  std::ostream& operator<<(std::ostream& os, TColor color)
   {
     if (!os
      || !os.rdbuf())
@@ -180,9 +154,9 @@ namespace
     {
       using namespace std;
 
-      for (detail::bool_expression::const_iterator token = expr.begin(); token != expr.end(); ++token)
+      for (const auto& token : expr)
       {
-        const detail::string_maker_op* const op = dynamic_cast<const detail::string_maker_op*>(&*token);
+        const auto* const op = dynamic_cast<const detail::string_maker_op*>(&token);
         if (!op)
           continue;
 
@@ -246,76 +220,79 @@ namespace detail
     }
 
     bool is_operator = false;
-    for (bool_expression::const_iterator token = expr.begin(); token != expr.end() && os.good(); ++token)
+    bool first = true;
+    for (const auto& token : expr)
     {
-      if (token != expr.begin())
+      if (!first)
         os << os.fill();
+      else
+        first = false;
       os << (is_operator ? TColor::Yellow : TColor::Cyan);
       if (os.good())
-        os << *token;
+        os << token;
       is_operator = !is_operator;
     }
 
     return os << TColor::None;
   }
 
-  bool_expression::const_iterator::const_iterator() AWESOME_NOEXCEPT
-    : cur(NULL)
+  bool_expression::const_iterator::const_iterator() noexcept
+    : cur(nullptr)
   {}
 
-  bool_expression::const_iterator::const_iterator(const stringifier* cur_) AWESOME_NOEXCEPT
+  bool_expression::const_iterator::const_iterator(const stringifier* cur_) noexcept
     : cur(cur_)
   {}
 
-  bool_expression::const_iterator& bool_expression::const_iterator::operator++() AWESOME_NOEXCEPT
+  bool_expression::const_iterator& bool_expression::const_iterator::operator++() noexcept
   {
     cur = cur->next;
     return *this;
   }
 
-  bool_expression::const_iterator bool_expression::const_iterator::operator++(int) AWESOME_NOEXCEPT
+  bool_expression::const_iterator bool_expression::const_iterator::operator++(int) noexcept
   {
     const_iterator prev(*this);
     ++*this;
     return prev;
   }
 
-  stringifier const& bool_expression::const_iterator::operator*() const AWESOME_NOEXCEPT
+  stringifier const& bool_expression::const_iterator::operator*() const noexcept
   {
     return *cur;
   }
 
-  stringifier const* bool_expression::const_iterator::operator->() const AWESOME_NOEXCEPT
+  stringifier const* bool_expression::const_iterator::operator->() const noexcept
   {
     return cur;
   }
 
-  bool bool_expression::const_iterator::operator==(const const_iterator& rhs) const AWESOME_NOEXCEPT
+  bool bool_expression::const_iterator::operator==(const const_iterator& rhs) const noexcept
   {
     return !(this->cur != rhs.cur);
   }
 
-  bool bool_expression::const_iterator::operator!=(const const_iterator& rhs) const AWESOME_NOEXCEPT
+  bool bool_expression::const_iterator::operator!=(const const_iterator& rhs) const noexcept
   {
     return this->cur != rhs.cur;
   }
 
-  bool_expression::const_iterator bool_expression::begin() const AWESOME_NOEXCEPT
+  bool_expression::const_iterator bool_expression::begin() const noexcept
   {
     return fail_expression;
   }
 
-  bool_expression::const_iterator bool_expression::end() const AWESOME_NOEXCEPT
+  bool_expression::const_iterator bool_expression::end() const noexcept
   {
     return const_iterator();
   }
 }
 
-violation_info::violation_info() AWESOME_NOEXCEPT
+violation_info::violation_info() noexcept
   : line_number(-1)
-  , file_name(NULL)
-  , function_name(NULL)
-  , comment(NULL)
+  , file_name(nullptr)
+  , function_name(nullptr)
+  , comment(nullptr)
   , expression(true /* aka no failure */)
 {
 }
@@ -326,12 +303,12 @@ violation_info::violation_info(
   , const char*                     function
   , const char*                     expr_str
   , detail::bool_expression         expr
-  ) AWESOME_NOEXCEPT
+  ) noexcept
   : line_number(line)
   , file_name(file)
   , function_name(function)
   , comment(expr_str)
-  , expression(AWESOME_MOVE(expr))
+  , expression(std::move(expr))
 {
 }
 
@@ -347,7 +324,7 @@ namespace
 
 precondition_error::precondition_error(violation_info info)
   : std::invalid_argument(assert_fail_to_string(info))
-  , _info(AWESOME_MOVE(info))
+  , _info(std::move(info))
 {
 }
 
@@ -356,7 +333,7 @@ std::ostream& operator<<(std::ostream& os, const precondition_error& error)
   return assert_fail_default_log(os, error._info);
 }
 
-std::ostream& assert_fail_default_log(std::ostream& os, const violation_info& info) AWESOME_NOEXCEPT
+std::ostream& assert_fail_default_log(std::ostream& os, const violation_info& info) noexcept
 {
   const std::ios_base::fmtflags flags(os.flags());
 
@@ -375,7 +352,7 @@ std::ostream& assert_fail_default_log(std::ostream& os, const violation_info& in
   return os;
 }
 
-void assert_fail_default_log(const violation_info& info) AWESOME_NOEXCEPT
+void assert_fail_default_log(const violation_info& info) noexcept
 {
   assert_fail_default_log(std::cerr, info)
     // Must flush() because we're likely to terminate after this
@@ -385,7 +362,7 @@ void assert_fail_default_log(const violation_info& info) AWESOME_NOEXCEPT
 namespace
 {
   AWESOME_NORETURN
-  void assert_failed_default(violation_info in_info) AWESOME_NOEXCEPT
+  void assert_failed_default(violation_info in_info) noexcept
   {
     // To get abort(), regardless of which namespace it's in.
     using namespace std;
@@ -393,7 +370,7 @@ namespace
     {
       // Prevent memory leak detectors from complaining about our memory (abort() prevents destructors
       // from running), by ensuring this gets destroyed as soon as we leave this scope.
-      violation_info info(AWESOME_MOVE(in_info));
+      violation_info info(std::move(in_info));
 
       assert_fail_default_log(info);
     }
@@ -411,17 +388,15 @@ void assert_failed_precondition(
   , detail::bool_expression         expr
   ) AWESOME_PRECONDITION_NOEXCEPT
 {
-  violation_info info(file, line, function, expr_str, AWESOME_MOVE(expr));
+  violation_info info(file, line, function, expr_str, std::move(expr));
 
-#if __cplusplus >= 201103L
-  if (noexcept(assert_failed_precondition(file, line, function, expr_str, AWESOME_MOVE(expr))))
-    assert_failed_default(AWESOME_MOVE(info));
-#endif
+  if (noexcept(assert_failed_precondition(file, line, function, expr_str, std::move(expr))))
+    assert_failed_default(std::move(info));
 
 #ifndef AWESOME_PRECONDITION_NO_NOEXCEPT
-  assert_failed_default(AWESOME_MOVE(info));
+  assert_failed_default(std::move(info));
 #else
-  throw precondition_error(AWESOME_MOVE(info));
+  throw precondition_error(std::move(info));
 #endif
 }
 
@@ -434,7 +409,7 @@ void assert_failed_invariant(
   , detail::bool_expression         expr
   ) AWESOME_INVARIANT_NOEXCEPT
 {
-  assert_failed_default(violation_info(file, line, function, expr_str, AWESOME_MOVE(expr)));
+  assert_failed_default(violation_info(file, line, function, expr_str, std::move(expr)));
 }
 
 AWESOME_ATTR_WEAK
@@ -446,7 +421,7 @@ void assert_failed_postcondition(
   , detail::bool_expression         expr
   ) AWESOME_POSTCONDITION_NOEXCEPT
 {
-  assert_failed_default(violation_info(file, line, function, expr_str, AWESOME_MOVE(expr)));
+  assert_failed_default(violation_info(file, line, function, expr_str, std::move(expr)));
 }
 
 }

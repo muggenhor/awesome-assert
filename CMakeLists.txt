@@ -39,11 +39,29 @@ target_include_directories(${PROJECT_NAME}_static PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>
 )
+target_compile_features(${PROJECT_NAME}_static PUBLIC
+  cxx_constexpr
+  cxx_explicit_conversions
+  cxx_extern_templates
+  cxx_func_identifier
+  cxx_noexcept
+  cxx_nullptr
+  cxx_override
+  cxx_range_for
+  cxx_rvalue_references
+  cxx_static_assert
+  cxx_strong_enums
+  cxx_trailing_return_types
+  # We would like to use 'cxx_reference_qualified_functions' here as well, but GCC 4.7 doesn't support it (QNX)
+)
 add_library(${PROJECT_NAME} SHARED
   $<TARGET_PROPERTY:${PROJECT_NAME}_static,SOURCES>
 )
 target_include_directories(${PROJECT_NAME} PUBLIC
   $<TARGET_PROPERTY:${PROJECT_NAME}_static,INTERFACE_INCLUDE_DIRECTORIES>
+)
+target_compile_features(${PROJECT_NAME} PUBLIC
+  $<TARGET_PROPERTY:${PROJECT_NAME}_static,INTERFACE_COMPILE_FEATURES>
 )
 set_target_properties(
     ${PROJECT_NAME}_static

@@ -1,4 +1,5 @@
 language: cpp
+dist: trusty
 addons:
   apt:
     packages:
@@ -6,6 +7,7 @@ addons:
       - cmake
       - cmake-data
       - cppcheck
+      - g++-4.7
       - ninja-build
     sources:
       - george-edison55-precise-backports
@@ -16,15 +18,13 @@ compiler:
   - clang
   - gcc
 env:
-  - CMAKE_CXX_STANDARD=98
   - CMAKE_CXX_STANDARD=11
-  - CPPCHECK=1
 matrix:
   exclude:
     - compiler: clang
-      env: CPPCHECK=1
+      env: CPPCHECK=yes
     - os: osx
-      env: CPPCHECK=1
+      env: CPPCHECK=yes
     - os: osx
       compiler: gcc
 before_install:
