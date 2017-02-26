@@ -45,14 +45,10 @@ stringifier::~stringifier() noexcept
 {
   while (next)
   {
-    stringifier* const to_delete = next;
+    std::unique_ptr<stringifier> const to_delete(std::move(next));
 
-    // Delete on next iteration
-    next = next->next;
-
-    // Prevent recursion of unknown depth in destructor calls
-    to_delete->next = nullptr;
-    delete to_delete;
+    // Delete on next iteration and prevent recursion of unknown depth in destructor call of to_delete
+    next = std::move(to_delete->next);
   }
 }
 
@@ -246,7 +242,7 @@ namespace detail
 
   bool_expression::const_iterator& bool_expression::const_iterator::operator++() noexcept
   {
-    cur = cur->next;
+    cur = cur->next.get();
     return *this;
   }
 
@@ -279,7 +275,7 @@ namespace detail
 
   bool_expression::const_iterator bool_expression::begin() const noexcept
   {
-    return fail_expression;
+    return fail_expression.get();
   }
 
   bool_expression::const_iterator bool_expression::end() const noexcept

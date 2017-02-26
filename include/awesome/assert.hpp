@@ -24,6 +24,7 @@
 #include "awesome_export.h"
 #include <iosfwd>
 #include <iterator>
+#include <memory>
 #include <stdexcept>
 
 #if __cplusplus >= 201103L
@@ -78,23 +79,19 @@ namespace AwesomeAssert
 
   struct AWESOME_EXPORT stringifier
   {
-    stringifier() noexcept
-      : next(nullptr)
-    {}
     virtual ~stringifier() noexcept;
     virtual std::ostream& convert(std::ostream& os) const = 0;
 
   private:
     friend struct detail::bool_expression;
     // Must be inline to ensure the compiler has the full body available for constant propagation
-    stringifier* set_next(stringifier* const next_) noexcept
+    stringifier* set_next(std::unique_ptr<stringifier> next_) noexcept
     {
-      delete next;
-      next = next_;
+      next = std::move(next_);
       return this;
     }
 
-    stringifier* next;
+    std::unique_ptr<stringifier> next;
   };
 
   AWESOME_EXPORT std::ostream& operator<<(std::ostream& os, const stringifier& str);
@@ -175,27 +172,19 @@ namespace AwesomeAssert
     {
     private:
       template <typename T>
-      static stringifier* create_expression_list(T&& val)
+      static std::unique_ptr<stringifier> create_expression_list(T&& val)
       {
-        return new string_maker<T>(std::forward<T>(val));
+        return std::unique_ptr<string_maker<T>>(new string_maker<T>(std::forward<T>(val)));
       }
 
       template <typename TL, typename TO, typename TR>
-      static stringifier* create_expression_list(TL&& lhs, TO&&, TR&& rhs)
+      static std::unique_ptr<stringifier> create_expression_list(TL&& lhs, TO&&, TR&& rhs)
       {
         // Constructing in reverse order because of the linked-list structure
-        stringifier* expr = new string_maker<TR>(std::forward<TR>(rhs));
-        try
-        {
-          expr = (new string_maker<TO>)->set_next(expr);
-          expr = (new string_maker<TL>(std::forward<TL>(lhs)))->set_next(expr);
-          return expr;
-        }
-        catch (...)
-        {
-          delete expr;
-          throw;
-        }
+        std::unique_ptr<stringifier> expr(new string_maker<TR>(std::forward<TR>(rhs)));
+        expr.reset((new string_maker<TO>)->set_next(std::move(expr)));
+        expr.reset((new string_maker<TL>(std::forward<TL>(lhs)))->set_next(std::move(expr)));
+        return expr;
       }
 
     public:
@@ -211,6 +200,7 @@ namespace AwesomeAssert
         bool operator!=(const const_iterator& rhs) const noexcept;
 
       private:
+        //! non-owning pointer, raw pointers are never owners
         const stringifier* cur;
       };
 
@@ -229,15 +219,10 @@ namespace AwesomeAssert
       }
 
       bool_expression(bool_expression&& rhs) noexcept
-        : fail_expression(rhs.fail_expression)
-      {
-        rhs.fail_expression = nullptr;
-      }
+        : fail_expression(std::move(rhs.fail_expression))
+      {}
 
-      ~bool_expression() noexcept
-      {
-        delete fail_expression;
-      }
+      ~bool_expression() noexcept = default;
 
       const_iterator begin() const noexcept;
       const_iterator end() const noexcept;
@@ -280,7 +265,7 @@ namespace AwesomeAssert
       //! Storing string converters instead of strings to prevent inlining of conversion code.
       //! Either \c NULL or terminated with a \c NULL sentinel. This removes the need for a separate
       //! size field, which would increase code size for setting up and copying that field.
-      stringifier* fail_expression;
+      std::unique_ptr<stringifier> fail_expression;
     };
 
     AWESOME_EXPORT std::ostream& operator<<(std::ostream& os, const bool_expression& expr);
