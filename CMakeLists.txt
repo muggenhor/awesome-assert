@@ -52,7 +52,6 @@ target_compile_features(${PROJECT_NAME}_static PUBLIC
   cxx_static_assert
   cxx_strong_enums
   cxx_trailing_return_types
-  # We would like to use 'cxx_reference_qualified_functions' here as well, but GCC 4.7 doesn't support it (QNX)
 )
 add_library(${PROJECT_NAME} SHARED
   $<TARGET_PROPERTY:${PROJECT_NAME}_static,SOURCES>

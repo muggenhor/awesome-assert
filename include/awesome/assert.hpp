@@ -64,12 +64,6 @@
 
 #include <utility>
 
-#if !defined(__GNUC__) || __GNUC__ > 4 || __GNUC_MINOR__ > 7
-  #define AWESOME_RREF_OR_CONST &&
-#else
-  #define AWESOME_RREF_OR_CONST const
-#endif
-
 namespace AwesomeAssert
 {
   namespace detail
@@ -211,8 +205,8 @@ namespace AwesomeAssert
 
       // For unary expressions
       template <typename T>
-      explicit bool_expression(expression_lhs<T> val)
-        : bool_expression(std::move(val.lhs))
+      explicit bool_expression(expression_lhs<T> unaryExpr)
+        : bool_expression(std::move(unaryExpr.val))
       {
       }
 
@@ -284,35 +278,35 @@ namespace AwesomeAssert
     struct expression_lhs
     {
       expression_lhs(T lhs_)
-        : lhs(std::move(lhs_))
+        : val(std::move(lhs_))
       {}
 
-      template <class R> bool_expression operator==(R&& rhs) AWESOME_RREF_OR_CONST { return bool_expression(std::move(lhs), compare_eq(), std::forward<R>(rhs)); }
-      template <class R> bool_expression operator!=(R&& rhs) AWESOME_RREF_OR_CONST { return bool_expression(std::move(lhs), compare_ne(), std::forward<R>(rhs)); }
-      template <class R> bool_expression operator< (R&& rhs) AWESOME_RREF_OR_CONST { return bool_expression(std::move(lhs), compare_lt(), std::forward<R>(rhs)); }
-      template <class R> bool_expression operator<=(R&& rhs) AWESOME_RREF_OR_CONST { return bool_expression(std::move(lhs), compare_le(), std::forward<R>(rhs)); }
-      template <class R> bool_expression operator> (R&& rhs) AWESOME_RREF_OR_CONST { return bool_expression(std::move(lhs), compare_gt(), std::forward<R>(rhs)); }
-      template <class R> bool_expression operator>=(R&& rhs) AWESOME_RREF_OR_CONST { return bool_expression(std::move(lhs), compare_ge(), std::forward<R>(rhs)); }
+      template <class R> friend bool_expression operator==(expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), compare_eq(), std::forward<R>(rhs)); }
+      template <class R> friend bool_expression operator!=(expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), compare_ne(), std::forward<R>(rhs)); }
+      template <class R> friend bool_expression operator< (expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), compare_lt(), std::forward<R>(rhs)); }
+      template <class R> friend bool_expression operator<=(expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), compare_le(), std::forward<R>(rhs)); }
+      template <class R> friend bool_expression operator> (expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), compare_gt(), std::forward<R>(rhs)); }
+      template <class R> friend bool_expression operator>=(expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), compare_ge(), std::forward<R>(rhs)); }
 
       // Necessary to permit usage of these in expressions. They should be allowed because they
       // have higher precedence than comparison operators, but they're not without this because we
       // use left shift in expression_decomposer.
       template <typename R>
-      auto operator<<(R&& rhs) AWESOME_RREF_OR_CONST
+      friend auto operator<<(expression_lhs<T> lhs, R&& rhs)
         -> expression_lhs<decltype(T() << std::forward<R>(rhs))>
       {
-        return std::move(lhs) << std::forward<R>(rhs);
+        return std::move(lhs.val) << std::forward<R>(rhs);
       }
       template <typename R>
-      auto operator>>(R&& rhs) AWESOME_RREF_OR_CONST
+      friend auto operator>>(expression_lhs<T> lhs, R&& rhs)
         -> expression_lhs<decltype(T() >> std::forward<R>(rhs))>
       {
-        return std::move(lhs) >> std::forward<R>(rhs);
+        return std::move(lhs.val) >> std::forward<R>(rhs);
       }
 
     private:
       friend bool_expression;
-      T lhs;
+      T val;
     };
 
     struct expression_decomposer
