@@ -22,5 +22,8 @@
 
 int main(int argc, char**)
 {
+  // Compile-test only
+  AWESOME_EXPECTS(true);
+
   AWESOME_EXPECTS(argc >= 10 - argc);
 }

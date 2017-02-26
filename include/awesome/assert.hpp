@@ -168,6 +168,9 @@ namespace AwesomeAssert
 
   namespace detail
   {
+    template <typename T>
+    struct expression_lhs;
+
     struct AWESOME_EXPORT bool_expression
     {
     private:
@@ -205,6 +208,13 @@ namespace AwesomeAssert
       };
 
       typedef const_iterator iterator;
+
+      // For unary expressions
+      template <typename T>
+      explicit bool_expression(expression_lhs<T> val)
+        : bool_expression(std::move(val.lhs))
+      {
+      }
 
       template <typename T>
       explicit bool_expression(T&& val)
@@ -277,9 +287,6 @@ namespace AwesomeAssert
         : lhs(std::move(lhs_))
       {}
 
-      // For unary expressions
-      operator bool_expression() AWESOME_RREF_OR_CONST { return bool_expression(std::move(lhs)); }
-
       template <class R> bool_expression operator==(R&& rhs) AWESOME_RREF_OR_CONST { return bool_expression(std::move(lhs), compare_eq(), std::forward<R>(rhs)); }
       template <class R> bool_expression operator!=(R&& rhs) AWESOME_RREF_OR_CONST { return bool_expression(std::move(lhs), compare_ne(), std::forward<R>(rhs)); }
       template <class R> bool_expression operator< (R&& rhs) AWESOME_RREF_OR_CONST { return bool_expression(std::move(lhs), compare_lt(), std::forward<R>(rhs)); }
@@ -304,6 +311,7 @@ namespace AwesomeAssert
       }
 
     private:
+      friend bool_expression;
       T lhs;
     };
 
