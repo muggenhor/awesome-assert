@@ -102,7 +102,7 @@ namespace AwesomeAssert
       : val(std::move(val_))
     {}
 
-    virtual std::ostream& convert(std::ostream& os) const AWESOME_OVERRIDE
+    std::ostream& convert(std::ostream& os) const AWESOME_OVERRIDE
     {
       return os << val;
     }
@@ -148,17 +148,17 @@ namespace AwesomeAssert
     //! Internal marker type in the hierarchy for retrieving operators
     struct AWESOME_EXPORT string_maker_op : stringifier
     {
-      virtual std::ostream& convert(std::ostream& os) const AWESOME_OVERRIDE;
+      std::ostream& convert(std::ostream& os) const AWESOME_OVERRIDE;
       virtual const char* str() const noexcept = 0;
     };
   }
 
-  template <> struct AWESOME_EXPORT string_maker<detail::compare_eq> : detail::string_maker_op { virtual const char* str() const noexcept AWESOME_OVERRIDE; };
-  template <> struct AWESOME_EXPORT string_maker<detail::compare_ne> : detail::string_maker_op { virtual const char* str() const noexcept AWESOME_OVERRIDE; };
-  template <> struct AWESOME_EXPORT string_maker<detail::compare_lt> : detail::string_maker_op { virtual const char* str() const noexcept AWESOME_OVERRIDE; };
-  template <> struct AWESOME_EXPORT string_maker<detail::compare_le> : detail::string_maker_op { virtual const char* str() const noexcept AWESOME_OVERRIDE; };
-  template <> struct AWESOME_EXPORT string_maker<detail::compare_gt> : detail::string_maker_op { virtual const char* str() const noexcept AWESOME_OVERRIDE; };
-  template <> struct AWESOME_EXPORT string_maker<detail::compare_ge> : detail::string_maker_op { virtual const char* str() const noexcept AWESOME_OVERRIDE; };
+  template <> struct AWESOME_EXPORT string_maker<detail::compare_eq> : detail::string_maker_op { const char* str() const noexcept AWESOME_OVERRIDE; };
+  template <> struct AWESOME_EXPORT string_maker<detail::compare_ne> : detail::string_maker_op { const char* str() const noexcept AWESOME_OVERRIDE; };
+  template <> struct AWESOME_EXPORT string_maker<detail::compare_lt> : detail::string_maker_op { const char* str() const noexcept AWESOME_OVERRIDE; };
+  template <> struct AWESOME_EXPORT string_maker<detail::compare_le> : detail::string_maker_op { const char* str() const noexcept AWESOME_OVERRIDE; };
+  template <> struct AWESOME_EXPORT string_maker<detail::compare_gt> : detail::string_maker_op { const char* str() const noexcept AWESOME_OVERRIDE; };
+  template <> struct AWESOME_EXPORT string_maker<detail::compare_ge> : detail::string_maker_op { const char* str() const noexcept AWESOME_OVERRIDE; };
 
   namespace detail
   {
