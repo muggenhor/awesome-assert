@@ -27,7 +27,7 @@
 #include <memory>
 #include <stdexcept>
 
-#if __cplusplus >= 201103L
+#if __cplusplus >= 201103L || (defined(_MSC_VER) && _MSC_VER >= 1700) /* Visual Studio 2012 supports 'override' */
   #define AWESOME_OVERRIDE override
 #else
   #define AWESOME_OVERRIDE
