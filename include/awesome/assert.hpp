@@ -62,6 +62,7 @@
   #define AWESOME_NORETURN [[noreturn]]
 #endif
 
+#include <type_traits>
 #include <utility>
 
 namespace AwesomeAssert
@@ -79,10 +80,14 @@ namespace AwesomeAssert
   private:
     friend struct detail::bool_expression;
     // Must be inline to ensure the compiler has the full body available for constant propagation
-    stringifier* set_next(std::unique_ptr<stringifier> next_) noexcept
-    {
-      next = std::move(next_);
-      return this;
+    template <typename T, typename... Args>
+    friend typename std::enable_if<
+        std::is_base_of<stringifier, T>::value
+      , std::unique_ptr<stringifier>>::type
+    prepend(std::unique_ptr<stringifier> tail, Args &&... args) {
+      std::unique_ptr<stringifier> head(new T(std::forward<Args>(args)...));
+      head->next = std::move(tail);
+      return head;
     }
 
     std::unique_ptr<stringifier> next;
@@ -179,8 +184,8 @@ namespace AwesomeAssert
       {
         // Constructing in reverse order because of the linked-list structure
         std::unique_ptr<stringifier> expr(new string_maker<TR>(std::forward<TR>(rhs)));
-        expr.reset((new string_maker<TO>)->set_next(std::move(expr)));
-        expr.reset((new string_maker<TL>(std::forward<TL>(lhs)))->set_next(std::move(expr)));
+        expr = prepend<string_maker<TO>>(std::move(expr));
+        expr = prepend<string_maker<TL>>(std::move(expr), std::forward<TL>(lhs));
         return expr;
       }
 
