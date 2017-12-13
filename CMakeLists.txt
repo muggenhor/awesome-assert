@@ -24,7 +24,7 @@ if(NOT CMAKE_VERSION VERSION_LESS 3.3)
   cmake_policy(SET CMP0063 NEW)
 endif()
 
-project(AwesomeAssert)
+project(AwesomeAssert CXX)
 
 set(PUBLIC_HEADER_DIR include/awesome)
 set(PUBLIC_HEADERS
