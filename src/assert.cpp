@@ -45,7 +45,7 @@ stringifier::~stringifier() noexcept
 {
   while (next)
   {
-    std::unique_ptr<stringifier> const to_delete(std::move(next));
+    auto to_delete = std::move(next);
 
     // Delete on next iteration and prevent recursion of unknown depth in destructor call of to_delete
     next = std::move(to_delete->next);

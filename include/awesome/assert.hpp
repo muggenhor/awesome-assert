@@ -24,7 +24,6 @@
 #include "awesome_export.h"
 #include <iosfwd>
 #include <iterator>
-#include <memory>
 #include <stdexcept>
 
 #if __cplusplus >= 201103L || (defined(_MSC_VER) && _MSC_VER >= 1700) /* Visual Studio 2012 supports 'override' */
@@ -67,8 +66,70 @@
 
 namespace AwesomeAssert
 {
+  struct stringifier;
+
   namespace detail
   {
+    // std::unique_ptr<stringifier> variant that's marked for DLL export
+    class AWESOME_EXPORT stringifier_ptr
+    {
+    public:
+      constexpr stringifier_ptr() noexcept = default;
+      constexpr explicit stringifier_ptr(stringifier* _p) noexcept
+        : ptr(_p)
+      {}
+      constexpr stringifier_ptr(std::nullptr_t) noexcept
+        : ptr(nullptr)
+      {}
+
+      stringifier_ptr(stringifier_ptr&& rhs) noexcept
+        : ptr(rhs.ptr)
+      {
+        rhs.ptr = nullptr;
+      }
+
+      ~stringifier_ptr() noexcept;
+
+      friend void swap(stringifier_ptr& lhs, stringifier_ptr& rhs) noexcept
+      {
+        using std::swap;
+        swap(lhs.ptr, rhs.ptr);
+      }
+
+      stringifier_ptr& operator=(stringifier_ptr rhs) noexcept
+      {
+        // NOTE: this implementation _requires_ the argument to be by value instead of rvalue reference!
+        swap(*this, rhs);
+        return *this;
+      }
+
+            stringifier& operator *()       noexcept { return *ptr; }
+      const stringifier& operator *() const noexcept { return *ptr; }
+            stringifier* operator->()       noexcept { return  ptr; }
+      const stringifier* operator->() const noexcept { return  ptr; }
+            stringifier*        get()       noexcept { return  ptr; }
+      const stringifier*        get() const noexcept { return  ptr; }
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4800)
+#endif
+      explicit operator bool() const noexcept { return static_cast<bool>(ptr); }
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+      bool     operator !   () const noexcept { return !ptr; }
+
+    private:
+      stringifier* ptr = nullptr;
+    };
+
+    template <typename T, typename... Args>
+    typename std::enable_if<
+        std::is_base_of<stringifier, T>::value
+      , detail::stringifier_ptr>::type
+    prepend(detail::stringifier_ptr tail, Args&&... args);
+
     struct bool_expression;
   }
 
@@ -77,20 +138,20 @@ namespace AwesomeAssert
     virtual ~stringifier() noexcept;
     virtual std::ostream& convert(std::ostream& os) const = 0;
 
+    // Necessary to prevent Visual Studio from defining the copy constructor and failing because stringifier_ptr isn't coypable
+    stringifier(stringifier&&) = default;
+    constexpr stringifier() noexcept = default;
+
   private:
     friend struct detail::bool_expression;
     // Must be inline to ensure the compiler has the full body available for constant propagation
     template <typename T, typename... Args>
     friend typename std::enable_if<
         std::is_base_of<stringifier, T>::value
-      , std::unique_ptr<stringifier>>::type
-    prepend(std::unique_ptr<stringifier> tail, Args &&... args) {
-      std::unique_ptr<stringifier> head(new T(std::forward<Args>(args)...));
-      head->next = std::move(tail);
-      return head;
-    }
+      , detail::stringifier_ptr>::type
+    detail::prepend(detail::stringifier_ptr tail, Args&&... args);
 
-    std::unique_ptr<stringifier> next;
+    detail::stringifier_ptr next;
   };
 
   AWESOME_EXPORT std::ostream& operator<<(std::ostream& os, const stringifier& str);
@@ -167,6 +228,22 @@ namespace AwesomeAssert
 
   namespace detail
   {
+    inline stringifier_ptr::~stringifier_ptr() noexcept
+    {
+      delete ptr;
+    }
+
+    template <typename T, typename... Args>
+    typename std::enable_if<
+        std::is_base_of<stringifier, T>::value
+      , detail::stringifier_ptr>::type
+    prepend(detail::stringifier_ptr tail, Args&&... args)
+    {
+      detail::stringifier_ptr head(new T(std::forward<Args>(args)...));
+      head->next = std::move(tail);
+      return head;
+    }
+
     template <typename T>
     struct expression_lhs;
 
@@ -174,16 +251,16 @@ namespace AwesomeAssert
     {
     private:
       template <typename T>
-      static std::unique_ptr<stringifier> create_expression_list(T&& val)
+      static stringifier_ptr create_expression_list(T&& val)
       {
-        return std::unique_ptr<string_maker<T>>(new string_maker<T>(std::forward<T>(val)));
+        return stringifier_ptr(new string_maker<T>(std::forward<T>(val)));
       }
 
       template <typename TL, typename TO, typename TR>
-      static std::unique_ptr<stringifier> create_expression_list(TL&& lhs, TO&&, TR&& rhs)
+      static stringifier_ptr create_expression_list(TL&& lhs, TO&&, TR&& rhs)
       {
         // Constructing in reverse order because of the linked-list structure
-        std::unique_ptr<stringifier> expr(new string_maker<TR>(std::forward<TR>(rhs)));
+        stringifier_ptr expr(new string_maker<TR>(std::forward<TR>(rhs)));
         expr = prepend<string_maker<TO>>(std::move(expr));
         expr = prepend<string_maker<TL>>(std::move(expr), std::forward<TL>(lhs));
         return expr;
@@ -227,11 +304,7 @@ namespace AwesomeAssert
       {
       }
 
-      bool_expression(bool_expression&& rhs) noexcept
-        : fail_expression(std::move(rhs.fail_expression))
-      {}
-
-      ~bool_expression() noexcept = default;
+      bool_expression(bool_expression&& rhs) noexcept = default;
 
       const_iterator begin() const noexcept;
       const_iterator end() const noexcept;
@@ -274,7 +347,7 @@ namespace AwesomeAssert
       //! Storing string converters instead of strings to prevent inlining of conversion code.
       //! Either \c NULL or terminated with a \c NULL sentinel. This removes the need for a separate
       //! size field, which would increase code size for setting up and copying that field.
-      std::unique_ptr<stringifier> fail_expression;
+      stringifier_ptr fail_expression;
     };
 
     AWESOME_EXPORT std::ostream& operator<<(std::ostream& os, const bool_expression& expr);
