@@ -61,6 +61,13 @@
   #define AWESOME_NORETURN [[noreturn]]
 #endif
 
+// Helps preventing C4910 on MSVC: '__declspec(dllexport)' and 'extern' are incompatible on an explicit instantiation
+#if defined(AwesomeAssert_EXPORTS) && defined(_MSC_VER)
+  #define AWESOME_IMPORT
+#else
+  #define AWESOME_IMPORT AWESOME_EXPORT
+#endif
+
 #include <type_traits>
 #include <utility>
 
@@ -178,26 +185,26 @@ namespace AwesomeAssert
   };
 
   // Reduce amount of code needing to be duplicated across object files
-  extern template struct AWESOME_EXPORT string_maker<bool>;
-  extern template struct AWESOME_EXPORT string_maker<short>;
-  extern template struct AWESOME_EXPORT string_maker<unsigned short>;
-  extern template struct AWESOME_EXPORT string_maker<int>;
-  extern template struct AWESOME_EXPORT string_maker<unsigned int>;
-  extern template struct AWESOME_EXPORT string_maker<long>;
-  extern template struct AWESOME_EXPORT string_maker<unsigned long>;
-  extern template struct AWESOME_EXPORT string_maker<long long>;
-  extern template struct AWESOME_EXPORT string_maker<unsigned long long>;
-  extern template struct AWESOME_EXPORT string_maker<float>;
-  extern template struct AWESOME_EXPORT string_maker<double>;
-  extern template struct AWESOME_EXPORT string_maker<long double>;
-  extern template struct AWESOME_EXPORT string_maker<void*>;
-  extern template struct AWESOME_EXPORT string_maker<const void*>;
-  extern template struct AWESOME_EXPORT string_maker<char>;
-  extern template struct AWESOME_EXPORT string_maker<signed char>;
-  extern template struct AWESOME_EXPORT string_maker<unsigned char>;
-  extern template struct AWESOME_EXPORT string_maker<const char*>;
-  extern template struct AWESOME_EXPORT string_maker<const signed char*>;
-  extern template struct AWESOME_EXPORT string_maker<const unsigned char*>;
+  extern template struct AWESOME_IMPORT string_maker<bool>;
+  extern template struct AWESOME_IMPORT string_maker<short>;
+  extern template struct AWESOME_IMPORT string_maker<unsigned short>;
+  extern template struct AWESOME_IMPORT string_maker<int>;
+  extern template struct AWESOME_IMPORT string_maker<unsigned int>;
+  extern template struct AWESOME_IMPORT string_maker<long>;
+  extern template struct AWESOME_IMPORT string_maker<unsigned long>;
+  extern template struct AWESOME_IMPORT string_maker<long long>;
+  extern template struct AWESOME_IMPORT string_maker<unsigned long long>;
+  extern template struct AWESOME_IMPORT string_maker<float>;
+  extern template struct AWESOME_IMPORT string_maker<double>;
+  extern template struct AWESOME_IMPORT string_maker<long double>;
+  extern template struct AWESOME_IMPORT string_maker<void*>;
+  extern template struct AWESOME_IMPORT string_maker<const void*>;
+  extern template struct AWESOME_IMPORT string_maker<char>;
+  extern template struct AWESOME_IMPORT string_maker<signed char>;
+  extern template struct AWESOME_IMPORT string_maker<unsigned char>;
+  extern template struct AWESOME_IMPORT string_maker<const char*>;
+  extern template struct AWESOME_IMPORT string_maker<const signed char*>;
+  extern template struct AWESOME_IMPORT string_maker<const unsigned char*>;
 
   namespace detail
   {
