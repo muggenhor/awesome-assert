@@ -36,7 +36,7 @@ Preferrably `noexcept` as well, although that should probably be customizable.
 
 ## License
 
-Copyright (C) 2016 Giel van Schijndel
+Copyright (C) 2016-2017 Giel van Schijndel
 
 AwesomeAssert is free software: you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public License

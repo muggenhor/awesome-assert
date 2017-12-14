@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2016 Giel van Schijndel
+ *  Copyright (C) 2016-2017 Giel van Schijndel
  *
  *  This file is part of AwesomeAssert.
  *
