@@ -292,6 +292,8 @@ namespace AwesomeAssert
 
       typedef const_iterator iterator;
 
+      constexpr explicit bool_expression() = default;
+
       // For unary expressions
       template <typename T>
       explicit bool_expression(expression_lhs<T> unaryExpr)
@@ -312,6 +314,7 @@ namespace AwesomeAssert
       }
 
       bool_expression(bool_expression&& rhs) noexcept = default;
+      bool_expression& operator=(bool_expression&& rhs) noexcept = default;
 
       const_iterator begin() const noexcept;
       const_iterator end() const noexcept;
