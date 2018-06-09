@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2016-2017 Giel van Schijndel
+ *  Copyright (C) 2016-2018 Giel van Schijndel
  *
  *  This file is part of AwesomeAssert.
  *
@@ -172,7 +172,7 @@ namespace AwesomeAssert
   struct string_maker : stringifier
   {
     explicit string_maker(T val_)
-      : val(std::move(val_))
+      : val(std::forward<T>(val_))
     {}
 
     std::ostream& convert(std::ostream& os) const AWESOME_OVERRIDE
