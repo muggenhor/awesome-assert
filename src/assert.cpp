@@ -386,9 +386,6 @@ void assert_failed_precondition(
 {
   violation_info info(file, line, function, expr_str, std::move(expr));
 
-  if (noexcept(assert_failed_precondition(file, line, function, expr_str, std::move(expr))))
-    assert_failed_default(std::move(info));
-
 #ifndef AWESOME_PRECONDITION_NO_NOEXCEPT
   assert_failed_default(std::move(info));
 #else
