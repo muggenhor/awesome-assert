@@ -116,22 +116,22 @@ namespace AwesomeAssert
         return *this;
       }
 
-            stringifier& operator *()       noexcept { return *ptr; }
-      const stringifier& operator *() const noexcept { return *ptr; }
-            stringifier* operator->()       noexcept { return  ptr; }
-      const stringifier* operator->() const noexcept { return  ptr; }
-            stringifier*        get()       noexcept { return  ptr; }
-      const stringifier*        get() const noexcept { return  ptr; }
+      AWESOME_CXX14_CONSTEXPR       stringifier& operator *()       noexcept { return *ptr; }
+      constexpr               const stringifier& operator *() const noexcept { return *ptr; }
+      AWESOME_CXX14_CONSTEXPR       stringifier* operator->()       noexcept { return  ptr; }
+      constexpr               const stringifier* operator->() const noexcept { return  ptr; }
+      AWESOME_CXX14_CONSTEXPR       stringifier*        get()       noexcept { return  ptr; }
+      constexpr               const stringifier*        get() const noexcept { return  ptr; }
 
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable:4800)
 #endif
-      explicit operator bool() const noexcept { return static_cast<bool>(ptr); }
+      constexpr explicit operator bool() const noexcept { return static_cast<bool>(ptr); }
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
-      bool     operator !   () const noexcept { return !ptr; }
+      constexpr bool     operator !   () const noexcept { return !ptr; }
 
     private:
       stringifier* ptr = nullptr;
@@ -177,7 +177,7 @@ namespace AwesomeAssert
   template <typename T>
   struct string_maker : stringifier
   {
-    explicit string_maker(T val_)
+    constexpr explicit string_maker(T val_)
       : val(std::forward<T>(val_))
     {}
 
@@ -217,12 +217,12 @@ namespace AwesomeAssert
     // Replacements for std::equal, std::less, etc. that have the template on the function instead
     // of the class. Necessary to permit comparisons of differing types without forcing a conversion.
     // This gets solved in a later C++ standard (14 or 17, IIRC), but that doesn't help us now.
-    struct compare_eq { template <class TL, class TR> bool operator()(const TL& lhs, const TR& rhs) const { return lhs == rhs; } };
-    struct compare_ne { template <class TL, class TR> bool operator()(const TL& lhs, const TR& rhs) const { return lhs != rhs; } };
-    struct compare_lt { template <class TL, class TR> bool operator()(const TL& lhs, const TR& rhs) const { return lhs <  rhs; } };
-    struct compare_le { template <class TL, class TR> bool operator()(const TL& lhs, const TR& rhs) const { return lhs <= rhs; } };
-    struct compare_gt { template <class TL, class TR> bool operator()(const TL& lhs, const TR& rhs) const { return lhs >  rhs; } };
-    struct compare_ge { template <class TL, class TR> bool operator()(const TL& lhs, const TR& rhs) const { return lhs >= rhs; } };
+    struct compare_eq { template <class TL, class TR> constexpr bool operator()(const TL& lhs, const TR& rhs) const { return lhs == rhs; } };
+    struct compare_ne { template <class TL, class TR> constexpr bool operator()(const TL& lhs, const TR& rhs) const { return lhs != rhs; } };
+    struct compare_lt { template <class TL, class TR> constexpr bool operator()(const TL& lhs, const TR& rhs) const { return lhs <  rhs; } };
+    struct compare_le { template <class TL, class TR> constexpr bool operator()(const TL& lhs, const TR& rhs) const { return lhs <= rhs; } };
+    struct compare_gt { template <class TL, class TR> constexpr bool operator()(const TL& lhs, const TR& rhs) const { return lhs >  rhs; } };
+    struct compare_ge { template <class TL, class TR> constexpr bool operator()(const TL& lhs, const TR& rhs) const { return lhs >= rhs; } };
 
     //! Internal marker type in the hierarchy for retrieving operators
     struct AWESOME_EXPORT string_maker_op : stringifier
