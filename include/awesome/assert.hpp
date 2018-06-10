@@ -32,7 +32,7 @@
   #define AWESOME_OVERRIDE
 #endif
 
-#if __cplusplus >= 201402L /* Visual Studio doesn't support relaxed 'constexpr' */
+#if __cplusplus >= 201402L || (defined(_MSC_VER) && _MSC_VER >= 1910) /* Visual Studio 2017 supports relaxed 'constexpr' */
   #define AWESOME_CXX14_CONSTEXPR constexpr
 #else
   #define AWESOME_CXX14_CONSTEXPR
