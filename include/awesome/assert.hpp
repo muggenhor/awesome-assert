@@ -116,22 +116,22 @@ namespace AwesomeAssert
         return *this;
       }
 
-            stringifier& operator *()       noexcept { return *ptr; }
-      const stringifier& operator *() const noexcept { return *ptr; }
-            stringifier* operator->()       noexcept { return  ptr; }
-      const stringifier* operator->() const noexcept { return  ptr; }
-            stringifier*        get()       noexcept { return  ptr; }
-      const stringifier*        get() const noexcept { return  ptr; }
+      AWESOME_CXX14_CONSTEXPR       stringifier& operator *()       noexcept { return *ptr; }
+      constexpr               const stringifier& operator *() const noexcept { return *ptr; }
+      AWESOME_CXX14_CONSTEXPR       stringifier* operator->()       noexcept { return  ptr; }
+      constexpr               const stringifier* operator->() const noexcept { return  ptr; }
+      AWESOME_CXX14_CONSTEXPR       stringifier*        get()       noexcept { return  ptr; }
+      constexpr               const stringifier*        get() const noexcept { return  ptr; }
 
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable:4800)
 #endif
-      explicit operator bool() const noexcept { return static_cast<bool>(ptr); }
+      constexpr explicit operator bool() const noexcept { return static_cast<bool>(ptr); }
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
-      bool     operator !   () const noexcept { return !ptr; }
+      constexpr bool     operator !   () const noexcept { return !ptr; }
 
     private:
       stringifier* ptr = nullptr;
@@ -177,7 +177,7 @@ namespace AwesomeAssert
   template <typename T>
   struct string_maker : stringifier
   {
-    explicit string_maker(T val_)
+    constexpr explicit string_maker(T val_)
       : val(std::forward<T>(val_))
     {}
 
@@ -217,12 +217,12 @@ namespace AwesomeAssert
     // Replacements for std::equal, std::less, etc. that have the template on the function instead
     // of the class. Necessary to permit comparisons of differing types without forcing a conversion.
     // This gets solved in a later C++ standard (14 or 17, IIRC), but that doesn't help us now.
-    struct compare_eq { template <class TL, class TR> bool operator()(const TL& lhs, const TR& rhs) const { return lhs == rhs; } };
-    struct compare_ne { template <class TL, class TR> bool operator()(const TL& lhs, const TR& rhs) const { return lhs != rhs; } };
-    struct compare_lt { template <class TL, class TR> bool operator()(const TL& lhs, const TR& rhs) const { return lhs <  rhs; } };
-    struct compare_le { template <class TL, class TR> bool operator()(const TL& lhs, const TR& rhs) const { return lhs <= rhs; } };
-    struct compare_gt { template <class TL, class TR> bool operator()(const TL& lhs, const TR& rhs) const { return lhs >  rhs; } };
-    struct compare_ge { template <class TL, class TR> bool operator()(const TL& lhs, const TR& rhs) const { return lhs >= rhs; } };
+    struct compare_eq { template <class TL, class TR> constexpr bool operator()(const TL& lhs, const TR& rhs) const { return lhs == rhs; } };
+    struct compare_ne { template <class TL, class TR> constexpr bool operator()(const TL& lhs, const TR& rhs) const { return lhs != rhs; } };
+    struct compare_lt { template <class TL, class TR> constexpr bool operator()(const TL& lhs, const TR& rhs) const { return lhs <  rhs; } };
+    struct compare_le { template <class TL, class TR> constexpr bool operator()(const TL& lhs, const TR& rhs) const { return lhs <= rhs; } };
+    struct compare_gt { template <class TL, class TR> constexpr bool operator()(const TL& lhs, const TR& rhs) const { return lhs >  rhs; } };
+    struct compare_ge { template <class TL, class TR> constexpr bool operator()(const TL& lhs, const TR& rhs) const { return lhs >= rhs; } };
 
     //! Internal marker type in the hierarchy for retrieving operators
     struct AWESOME_EXPORT string_maker_op : stringifier
@@ -241,6 +241,7 @@ namespace AwesomeAssert
 
   namespace detail
   {
+    // Must be inline to ensure the compiler has the full body available for constant propagation
     inline stringifier_ptr::~stringifier_ptr() noexcept
     {
       delete ptr;
@@ -282,18 +283,41 @@ namespace AwesomeAssert
     public:
       struct AWESOME_EXPORT const_iterator : std::iterator<std::forward_iterator_tag, const stringifier>
       {
-        const_iterator() noexcept;
-        const_iterator(const stringifier* cur_) noexcept;
-        const_iterator& operator++() noexcept;
-        const_iterator operator++(int) noexcept;
-        stringifier const& operator*() const noexcept;
-        stringifier const* operator->() const noexcept;
-        bool operator==(const const_iterator& rhs) const noexcept;
-        bool operator!=(const const_iterator& rhs) const noexcept;
+        constexpr explicit const_iterator() noexcept = default;
+        constexpr explicit const_iterator(const stringifier* cur_) noexcept
+          : cur{cur_}
+        {
+        }
+
+        const_iterator& operator++() noexcept
+        {
+          cur = cur->next.get();
+          return *this;
+        }
+
+        const_iterator operator++(int) noexcept
+        {
+          auto prev = *this;
+          ++*this;
+          return prev;
+        }
+
+        constexpr stringifier const& operator *() const noexcept { return *cur; }
+        constexpr stringifier const* operator->() const noexcept { return  cur; }
+
+        constexpr bool operator==(const const_iterator& rhs) const noexcept
+        {
+          return this->cur == rhs.cur;
+        }
+
+        constexpr bool operator!=(const const_iterator& rhs) const noexcept
+        {
+          return !(*this == rhs);
+        }
 
       private:
         //! non-owning pointer, raw pointers are never owners
-        const stringifier* cur;
+        const stringifier* cur = nullptr;
       };
 
       typedef const_iterator iterator;
@@ -322,13 +346,20 @@ namespace AwesomeAssert
       AWESOME_CXX14_CONSTEXPR bool_expression(bool_expression&& rhs) noexcept = default;
       bool_expression& operator=(bool_expression&& rhs) noexcept = default;
 
-      const_iterator begin() const noexcept;
-      const_iterator end() const noexcept;
+      constexpr const_iterator begin() const noexcept
+      {
+        return const_iterator{fail_expression.get()};
+      }
+
+      constexpr const_iterator end() const noexcept
+      {
+        return const_iterator{};
+      }
 
       // Must be inline, along with all code that can potentially change fail_expression's value.
       // This to ensure the compiler has the opportunity to determine that the asserted condition
       // is equal to fail_expression not being NULL.
-      explicit operator bool() const noexcept
+      constexpr explicit operator bool() const noexcept
       {
         return !fail_expression;
       }
@@ -371,7 +402,8 @@ namespace AwesomeAssert
     template <typename T>
     struct expression_lhs
     {
-      expression_lhs(T lhs_)
+      constexpr expression_lhs(T lhs_)
+        noexcept(noexcept(T{std::move(lhs_)}))
         : val(std::move(lhs_))
       {}
 
@@ -386,13 +418,15 @@ namespace AwesomeAssert
       // have higher precedence than comparison operators, but they're not without this because we
       // use left shift in expression_decomposer.
       template <typename R>
-      friend auto operator<<(expression_lhs<T> lhs, R&& rhs)
+      friend constexpr auto operator<<(expression_lhs<T> lhs, R&& rhs)
+        noexcept(noexcept(std::move(lhs.val) << std::forward<R>(rhs)))
         -> expression_lhs<decltype(T() << std::forward<R>(rhs))>
       {
         return std::move(lhs.val) << std::forward<R>(rhs);
       }
       template <typename R>
-      friend auto operator>>(expression_lhs<T> lhs, R&& rhs)
+      friend constexpr auto operator>>(expression_lhs<T> lhs, R&& rhs)
+        noexcept(noexcept(std::move(lhs.val) >> std::forward<R>(rhs)))
         -> expression_lhs<decltype(T() >> std::forward<R>(rhs))>
       {
         return std::move(lhs.val) >> std::forward<R>(rhs);
@@ -406,7 +440,9 @@ namespace AwesomeAssert
     struct expression_decomposer
     {
       template <typename T>
-      expression_lhs<typename std::remove_reference<T>::type> operator<<(T&& lhs)
+      constexpr
+      expression_lhs<typename std::remove_reference<T>::type> operator<<(T&& lhs) const
+        noexcept(noexcept(expression_lhs<typename std::remove_reference<T>::type>(std::forward<T>(lhs))))
       {
         return expression_lhs<typename std::remove_reference<T>::type>(std::forward<T>(lhs));
       }

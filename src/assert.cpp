@@ -231,57 +231,6 @@ namespace detail
 
     return os << TColor::None;
   }
-
-  bool_expression::const_iterator::const_iterator() noexcept
-    : cur(nullptr)
-  {}
-
-  bool_expression::const_iterator::const_iterator(const stringifier* cur_) noexcept
-    : cur(cur_)
-  {}
-
-  bool_expression::const_iterator& bool_expression::const_iterator::operator++() noexcept
-  {
-    cur = cur->next.get();
-    return *this;
-  }
-
-  bool_expression::const_iterator bool_expression::const_iterator::operator++(int) noexcept
-  {
-    const_iterator prev(*this);
-    ++*this;
-    return prev;
-  }
-
-  stringifier const& bool_expression::const_iterator::operator*() const noexcept
-  {
-    return *cur;
-  }
-
-  stringifier const* bool_expression::const_iterator::operator->() const noexcept
-  {
-    return cur;
-  }
-
-  bool bool_expression::const_iterator::operator==(const const_iterator& rhs) const noexcept
-  {
-    return !(this->cur != rhs.cur);
-  }
-
-  bool bool_expression::const_iterator::operator!=(const const_iterator& rhs) const noexcept
-  {
-    return this->cur != rhs.cur;
-  }
-
-  bool_expression::const_iterator bool_expression::begin() const noexcept
-  {
-    return fail_expression.get();
-  }
-
-  bool_expression::const_iterator bool_expression::end() const noexcept
-  {
-    return const_iterator();
-  }
 }
 
 namespace
