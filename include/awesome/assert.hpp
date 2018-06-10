@@ -117,21 +117,21 @@ namespace AwesomeAssert
       }
 
       AWESOME_CXX14_CONSTEXPR       stringifier& operator *()       noexcept { return *ptr; }
-      constexpr               const stringifier& operator *() const noexcept { return *ptr; }
+      AWESOME_CXX14_CONSTEXPR const stringifier& operator *() const noexcept { return *ptr; }
       AWESOME_CXX14_CONSTEXPR       stringifier* operator->()       noexcept { return  ptr; }
-      constexpr               const stringifier* operator->() const noexcept { return  ptr; }
+      AWESOME_CXX14_CONSTEXPR const stringifier* operator->() const noexcept { return  ptr; }
       AWESOME_CXX14_CONSTEXPR       stringifier*        get()       noexcept { return  ptr; }
-      constexpr               const stringifier*        get() const noexcept { return  ptr; }
+      AWESOME_CXX14_CONSTEXPR const stringifier*        get() const noexcept { return  ptr; }
 
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable:4800)
 #endif
-      constexpr explicit operator bool() const noexcept { return static_cast<bool>(ptr); }
+      AWESOME_CXX14_CONSTEXPR explicit operator bool() const noexcept { return static_cast<bool>(ptr); }
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
-      constexpr bool     operator !   () const noexcept { return !ptr; }
+      AWESOME_CXX14_CONSTEXPR bool     operator !   () const noexcept { return !ptr; }
 
     private:
       stringifier* ptr = nullptr;
@@ -289,13 +289,13 @@ namespace AwesomeAssert
         {
         }
 
-        const_iterator& operator++() noexcept
+        AWESOME_CXX14_CONSTEXPR const_iterator& operator++() noexcept
         {
           cur = cur->next.get();
           return *this;
         }
 
-        const_iterator operator++(int) noexcept
+        AWESOME_CXX14_CONSTEXPR const_iterator operator++(int) noexcept
         {
           auto prev = *this;
           ++*this;
@@ -346,12 +346,12 @@ namespace AwesomeAssert
       AWESOME_CXX14_CONSTEXPR bool_expression(bool_expression&& rhs) noexcept = default;
       bool_expression& operator=(bool_expression&& rhs) noexcept = default;
 
-      constexpr const_iterator begin() const noexcept
+      AWESOME_CXX14_CONSTEXPR const_iterator begin() const noexcept
       {
         return const_iterator{fail_expression.get()};
       }
 
-      constexpr const_iterator end() const noexcept
+      AWESOME_CXX14_CONSTEXPR const_iterator end() const noexcept
       {
         return const_iterator{};
       }
@@ -359,7 +359,7 @@ namespace AwesomeAssert
       // Must be inline, along with all code that can potentially change fail_expression's value.
       // This to ensure the compiler has the opportunity to determine that the asserted condition
       // is equal to fail_expression not being NULL.
-      constexpr explicit operator bool() const noexcept
+      AWESOME_CXX14_CONSTEXPR explicit operator bool() const noexcept
       {
         return !fail_expression;
       }
