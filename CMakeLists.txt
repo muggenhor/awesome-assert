@@ -26,6 +26,20 @@ endif()
 
 project(AwesomeAssert CXX)
 
+if(UNIX AND (
+       (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    OR (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9))
+    AND CMAKE_GENERATOR STREQUAL "Ninja")
+  # These compilers generate coloured output, but by default only when their output channel is a
+  # terminal (TTY/PTY). Ninja however captures all output in a pipe (per-subprocess), disabling
+  # coloured compiler diagnostics. We forcefully enable it because Ninja, since 1.0.0
+  # (ninja-build/ninja#198) takes care to strip VT100 CSI control sequences from the output if Ninja
+  # itself is writing to a pipe instead of a terminal. As a result this should give us the best of
+  # both worlds: coloured output when we're running in a terminal, plain output for editors, IDEs,
+  # etc.
+  set(CMAKE_CXX_FLAGS "-fdiagnostics-color=always ${CMAKE_CXX_FLAGS}" CACHE STRING "" FORCE)
+endif()
+
 set(PUBLIC_HEADER_DIR include/awesome)
 set(PUBLIC_HEADERS
   ${PUBLIC_HEADER_DIR}/assert.hpp
@@ -69,15 +83,6 @@ set_target_properties(
     VISIBILITY_INLINES_HIDDEN ON
     CXX_VISIBILITY_PRESET hidden
 )
-if(CMAKE_CXX_COMPILER_ID MATCHES "[Cc]lang")
-  # Stop Clang from whining about infinite recursion in the noexcept operator in assert_failed_precondition.
-  # The expression given to that operator is never allowed to be evaluated at runtime, so no recursion happens at all.
-  set_source_files_properties(
-      src/assert.cpp
-    PROPERTIES
-      COMPILE_FLAGS -Wno-infinite-recursion
-  )
-endif()
 
 include(GenerateExportHeader)
 
