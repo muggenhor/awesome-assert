@@ -31,6 +31,12 @@
   #include <unistd.h>
 #endif
 
+#if defined(__GNUC__) || defined(__clang__)
+  #define AWESOME_ATTR_WEAK __attribute__((__weak__))
+#else
+  #define AWESOME_ATTR_WEAK
+#endif
+
 namespace AwesomeAssert
 {
   namespace
@@ -93,39 +99,46 @@ namespace AwesomeAssert
       const char* _op;
       const char* _rhs;
     };
+  }
 
-    bool isatty(std::ostream& os)
-    {
-      if (!os.rdbuf())
-        return false;
+  native_handle_t get_stream_handle(std::ostream& os) noexcept
+  {
+    if (!os.rdbuf())
+      return invalid_native_handle;
 
 #if _XOPEN_VERSION >= 700 || _POSIX_VERSION >= 200112L
 #if __GLIBCXX__
-      // Support for glibc++: query the actual file-descriptor, can work for other things than stdout/stderr too
-      if (__gnu_cxx::stdio_sync_filebuf<char>* rdbuf = dynamic_cast<__gnu_cxx::stdio_sync_filebuf<char>*>(os.rdbuf()))
-      {
-        if (auto file = rdbuf->file())
-          return ::isatty(fileno(rdbuf->file()));
-      }
-#elif _LIBCPP_VERSION
-      // NOTE: the same isn't possible for Clang/libc++ because it hides the RTTI required to perform a dynamic_cast
-      //       to std::__stdoutbuf<char> from its dynamic symbol table. (The lacking private access is something that
-      //       could be worked around in a standards-compliant way, this cannot.)
-#endif
-
-      if (os.rdbuf() == std::cout.rdbuf())
-        return ::isatty(STDOUT_FILENO);
-      if (os.rdbuf() == std::cerr.rdbuf())
-        return ::isatty(STDERR_FILENO);
-#endif
-
-      return false;
+    // Support for glibc++: query the actual file-descriptor, can work for other things than stdout/stderr too
+    if (__gnu_cxx::stdio_sync_filebuf<char>* rdbuf = dynamic_cast<__gnu_cxx::stdio_sync_filebuf<char>*>(os.rdbuf()))
+    {
+      if (auto file = rdbuf->file())
+        return fileno(rdbuf->file());
     }
+#elif _LIBCPP_VERSION
+    // NOTE: the same isn't possible for Clang/libc++ because it hides the RTTI required to perform a dynamic_cast
+    //       to std::__stdoutbuf<char> from its dynamic symbol table. (The lacking private access is something that
+    //       could be worked around in a standards-compliant way, this cannot.)
+#endif
+
+    if (os.rdbuf() == std::cout.rdbuf())
+      return STDOUT_FILENO;
+    if (os.rdbuf() == std::cerr.rdbuf())
+      return STDERR_FILENO;
+#endif
+
+    return invalid_native_handle;
+  }
+
+  AWESOME_ATTR_WEAK
+  bool use_colors(std::ostream& os) noexcept
+  {
+    const auto handle = get_stream_handle(os);
+    return handle == invalid_native_handle ? false : ::isatty(handle);
   }
 
   std::ostream& operator<<(std::ostream& os, TColor color)
   {
-    if (!isatty(os))
+    if (!use_colors(os))
       return os;
 
 #if _XOPEN_VERSION >= 700 || _POSIX_VERSION >= 200112L

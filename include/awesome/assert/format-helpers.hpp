@@ -37,6 +37,27 @@ namespace AwesomeAssert
   };
 
   AWESOME_EXPORT std::ostream& operator<<(std::ostream& os, TColor color);
+
+#ifdef _WIN32
+  using native_handle_t = void*;
+  constexpr const native_handle_t invalid_native_handle = INVALID_HANDLE_VALUE;
+#else
+  using native_handle_t = int;
+  constexpr const native_handle_t invalid_native_handle = -1;
+#endif
+
+  /**
+   * Tries to determine the native handle associated with @a os.
+   *
+   * @returns the associated handle or @a invalid_native_handle if it couldn't determine the handle.
+   */
+  AWESOME_EXPORT native_handle_t get_stream_handle(std::ostream& os) noexcept;
+
+  /**
+   * Overridable extension point that determines whether AwesomeAssert should use colors when
+   * writing to the given output stream. Defaults to ::isatty(get_stream_handle(os)).
+   */
+  AWESOME_EXPORT bool use_colors(std::ostream& os) noexcept;
 }
 
 #endif // INCLUDED_AWESOME_ASSERT_FORMAT_HELPERS_HPP
