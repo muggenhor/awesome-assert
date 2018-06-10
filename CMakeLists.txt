@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2016-2017 Giel van Schijndel
+# Copyright (C) 2016-2018 Giel van Schijndel
 #
 # This file is part of AwesomeAssert.
 #
@@ -40,13 +40,19 @@ if(UNIX AND (
   set(CMAKE_CXX_FLAGS "-fdiagnostics-color=always ${CMAKE_CXX_FLAGS}" CACHE STRING "" FORCE)
 endif()
 
-set(PUBLIC_HEADER_DIR include/awesome)
+set(PUBLIC_HEADER_TOP_DIR include/awesome)
+set(PUBLIC_HEADER_DIR ${PUBLIC_HEADER_TOP_DIR}/assert)
+set(PUBLIC_HEADERS_TOP
+  ${PUBLIC_HEADER_TOP_DIR}/assert.hpp
+)
 set(PUBLIC_HEADERS
-  ${PUBLIC_HEADER_DIR}/assert.hpp
+  ${PUBLIC_HEADER_DIR}/format-helpers.hpp
 )
 
 add_library(${PROJECT_NAME}_static STATIC
   src/assert.cpp
+  src/format-helpers.cpp
+  ${PUBLIC_HEADERS_TOP}
   ${PUBLIC_HEADERS}
 )
 target_include_directories(${PROJECT_NAME}_static PUBLIC
@@ -86,8 +92,8 @@ set_target_properties(
 
 include(GenerateExportHeader)
 
-set(EXPORT_FILE_NAME ${PROJECT_BINARY_DIR}/${PUBLIC_HEADER_DIR}/awesome_export.h)
-list(APPEND PUBLIC_HEADERS ${EXPORT_FILE_NAME})
+set(EXPORT_FILE_NAME ${PROJECT_BINARY_DIR}/${PUBLIC_HEADER_TOP_DIR}/awesome_export.h)
+list(APPEND PUBLIC_HEADERS_TOP ${EXPORT_FILE_NAME})
 generate_export_header(${PROJECT_NAME}
   BASE_NAME Awesome
   EXPORT_FILE_NAME ${EXPORT_FILE_NAME}
@@ -95,7 +101,7 @@ generate_export_header(${PROJECT_NAME}
 
 # Make generated export header available for the target and its dependendees
 target_include_directories(${PROJECT_NAME}_static PUBLIC
-  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/${PUBLIC_HEADER_DIR}>
+  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/${PUBLIC_HEADER_TOP_DIR}>
 )
 target_compile_definitions(${PROJECT_NAME}_static PUBLIC AWESOME_STATIC_DEFINE)
 
@@ -104,6 +110,10 @@ install(TARGETS
   EXPORT ${PROJECT_NAME}
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
+)
+install(FILES
+  ${PUBLIC_HEADERS_TOP}
+  DESTINATION ${PUBLIC_HEADER_TOP_DIR}
 )
 install(FILES
   ${PUBLIC_HEADERS}

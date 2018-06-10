@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2016-2017 Giel van Schijndel
+ *  Copyright (C) 2016-2018 Giel van Schijndel
  *
  *  This file is part of AwesomeAssert.
  *
@@ -19,19 +19,11 @@
 */
 
 #include <awesome/assert.hpp>
+#include <awesome/assert/format-helpers.hpp>
 #include <cstdlib>
-#include <cstring>
 #include <iostream>
 #include <sstream>
 #include <string>
-
-#if __GLIBCXX__
-  #include <ext/stdio_sync_filebuf.h>
-#endif
-
-#ifndef WIN32
-  #include <unistd.h>
-#endif
 
 #ifdef __GNUC__
   #define AWESOME_ATTR_WEAK __attribute__((__weak__))
@@ -85,151 +77,11 @@ const char* string_maker<detail::compare_le>::str() const noexcept { return "<="
 const char* string_maker<detail::compare_gt>::str() const noexcept { return ">" ; }
 const char* string_maker<detail::compare_ge>::str() const noexcept { return ">="; }
 
-namespace
-{
-  enum class TColor
-  {
-    None,
-    Red,
-    Cyan,
-    Yellow,
-    Grey,
-    Bright
-  };
-
-  std::ostream& operator<<(std::ostream& os, TColor color)
-  {
-    if (!os
-     || !os.rdbuf())
-      return os;
-
-#if _XOPEN_VERSION >= 700 || _POSIX_VERSION >= 200112L
-    bool is_a_tty = false;
-#if __GLIBCXX__
-    // Support for glibc++: query the actual file-descriptor, can work for other things than stdout/stderr too
-    if (__gnu_cxx::stdio_sync_filebuf<char>* rdbuf = dynamic_cast<__gnu_cxx::stdio_sync_filebuf<char>*>(os.rdbuf()))
-    {
-      is_a_tty = rdbuf->file() && isatty(fileno(rdbuf->file()));
-    }
-#elif _LIBCPP_VERSION
-    // NOTE: the same isn't possible for Clang/libc++ because it hides the RTTI required to perform a dynamic_cast
-    //       to std::__stdoutbuf<char> from its dynamic symbol table. (The lacking private access is something that
-    //       could be worked around in a standards-compliant way, this cannot.)
-#endif
-
-    is_a_tty = is_a_tty
-     || (os.rdbuf() == std::cout.rdbuf() && isatty(STDOUT_FILENO))
-     || (os.rdbuf() == std::cerr.rdbuf() && isatty(STDERR_FILENO))
-     ;
-
-    if (is_a_tty)
-    {
-      switch (color)
-      {
-          case TColor::Red:         return os.write("\033[22;31m", 8);
-          case TColor::Cyan:        return os.write("\033[22;36m", 8);
-          case TColor::Yellow:      return os.write("\033[22;33m", 8);
-          case TColor::Grey:        return os.write("\033[1;30m", 7);
-          case TColor::Bright:      return os.write("\033[1;39m", 7);
-          case TColor::None:        return os.write("\033[22;39m", 8);
-      }
-    }
-#endif
-
-    return os;
-  }
-
-  class expression_colorizer
-  {
-  public:
-    expression_colorizer(const char* const expr_str, const detail::bool_expression& expr)
-      : _lhs(expr_str)
-      , _end(expr_str + strlen(expr_str))
-      , _op(_end)
-      , _rhs(_end)
-    {
-      using namespace std;
-
-      for (const auto& token : expr)
-      {
-        const auto* const op = dynamic_cast<const detail::string_maker_op*>(&token);
-        if (!op)
-          continue;
-
-        // Multiple operators found in the expression: don't even try to separate them
-        if (_op != _end)
-        {
-          _rhs = _op = _end;
-          return;
-        }
-
-        const char* const op_str = op->str();
-        _op = strstr(_lhs, op_str);
-        if (!_op)
-        {
-          _op = _end;
-          continue;
-        }
-
-        _rhs = _op + strlen(op_str);
-      }
-    }
-
-    friend std::ostream& operator<<(std::ostream& os, const expression_colorizer& expr)
-    {
-      os << TColor::Cyan;
-      if (os.good())
-        os.write(expr._lhs, expr._op  - expr._lhs);
-
-      os << TColor::Yellow;
-      if (os.good())
-        os.write(expr._op , expr._rhs - expr._op );
-
-      os << TColor::Cyan;
-      if (os.good())
-        os.write(expr._rhs, expr._end - expr._rhs);
-      return os << TColor::None;
-    }
-
-  private:
-    const char* _lhs;
-    const char* _end;
-    const char* _op;
-    const char* _rhs;
-  };
-}
-
 namespace detail
 {
   std::ostream& string_maker_op::convert(std::ostream& os) const
   {
     return os << this->str();
-  }
-
-  std::ostream& operator<<(std::ostream& os, const bool_expression& expr)
-  {
-    bool is_operator = false;
-    bool first = true;
-    for (const auto& token : expr)
-    {
-      if (!first)
-        os << os.fill();
-      else
-        first = false;
-      os << (is_operator ? TColor::Yellow : TColor::Cyan);
-      if (os.good())
-        os << token;
-      is_operator = !is_operator;
-    }
-
-    if (first)
-    {
-      os << TColor::Cyan;
-      if (os.good())
-        os << true;
-    }
-
-    return os << TColor::None;
   }
 }
 
@@ -252,25 +104,6 @@ precondition_error::precondition_error(violation_info info)
 std::ostream& operator<<(std::ostream& os, const precondition_error& error)
 {
   return assert_fail_default_log(os, error._info);
-}
-
-std::ostream& assert_fail_default_log(std::ostream& os, const violation_info& info) noexcept
-{
-  const std::ios_base::fmtflags flags(os.flags());
-
-  os << std::boolalpha
-    << TColor::Bright << info.file_name << ":" << info.line_number << ": " << info.function_name << ": "
-    << TColor::Grey   << "Assertion"
-    << TColor::None   << " `"
-                      << expression_colorizer(info.comment, info.expression)
-                      << "', with expansion `"
-                      << info.expression
-                      << "', "
-    << TColor::Red    << "failed"
-    << TColor::None   << ".\n"
-    ;
-  os.flags(flags);
-  return os;
 }
 
 void assert_fail_default_log(const violation_info& info) noexcept
