@@ -79,18 +79,18 @@ namespace AwesomeAssert
 
       friend std::ostream& operator<<(std::ostream& os, const expression_colorizer& expr)
       {
-        os << TColor::Cyan;
+        os << msg::expression;
         if (os.good())
           os.write(expr._lhs, expr._op  - expr._lhs);
 
-        os << TColor::Yellow;
+        os << msg::operator_;
         if (os.good())
           os.write(expr._op , expr._rhs - expr._op );
 
-        os << TColor::Cyan;
+        os << msg::expression;
         if (os.good())
           os.write(expr._rhs, expr._end - expr._rhs);
-        return os << TColor::None;
+        return os << msg::plain_text;
       }
 
     private:
@@ -136,24 +136,52 @@ namespace AwesomeAssert
     return handle == invalid_native_handle ? false : ::isatty(handle);
   }
 
-  std::ostream& operator<<(std::ostream& os, TColor color)
+  namespace
   {
-    if (!use_colors(os))
-      return os;
+    enum class TColor
+    {
+      None,
+      Red,
+      Cyan,
+      Yellow,
+      Grey,
+      Bright
+    };
+
+    std::ostream& operator<<(std::ostream& os, TColor color)
+    {
+      if (!use_colors(os))
+        return os;
 
 #if _XOPEN_VERSION >= 700 || _POSIX_VERSION >= 200112L
-    switch (color)
-    {
-      case TColor::Red:         return os.write("\033[22;31m", 8);
-      case TColor::Cyan:        return os.write("\033[22;36m", 8);
-      case TColor::Yellow:      return os.write("\033[22;33m", 8);
-      case TColor::Grey:        return os.write("\033[1;30m", 7);
-      case TColor::Bright:      return os.write("\033[1;39m", 7);
-      case TColor::None:        return os.write("\033[22;39m", 8);
-    }
+      switch (color)
+      {
+        case TColor::Red:         return os.write("\033[22;31m", 8);
+        case TColor::Cyan:        return os.write("\033[22;36m", 8);
+        case TColor::Yellow:      return os.write("\033[22;33m", 8);
+        case TColor::Grey:        return os.write("\033[1;30m", 7);
+        case TColor::Bright:      return os.write("\033[1;39m", 7);
+        case TColor::None:        return os.write("\033[22;39m", 8);
+      }
 #endif
 
-    return os;
+      return os;
+    }
+  }
+
+  AWESOME_ATTR_WEAK
+  std::ostream& operator<<(std::ostream& os, msg type)
+  {
+    switch (type)
+    {
+      case msg::plain_text:         return os << TColor::None;
+      case msg::expression:         return os << TColor::Cyan;
+      case msg::operator_:          return os << TColor::Yellow;
+      case msg::error:              return os << TColor::Red;
+      case msg::heading:            return os << TColor::Grey;
+      case msg::location_info:      [[fallthrough]];
+      case msg::title:              return os << TColor::Bright;
+    }
   }
 
   std::ostream& detail::operator<<(std::ostream& os, const bool_expression& expr)
@@ -166,7 +194,7 @@ namespace AwesomeAssert
         os << os.fill();
       else
         first = false;
-      os << (is_operator ? TColor::Yellow : TColor::Cyan);
+      os << (is_operator ? msg::operator_ : msg::expression);
       if (os.good())
         os << token;
       is_operator = !is_operator;
@@ -174,12 +202,12 @@ namespace AwesomeAssert
 
     if (first)
     {
-      os << TColor::Cyan;
+      os << msg::expression;
       if (os.good())
         os << true;
     }
 
-    return os << TColor::None;
+    return os << msg::plain_text;
   }
 
   std::ostream& assert_fail_default_log(std::ostream& os, const violation_info& info) noexcept
@@ -187,15 +215,15 @@ namespace AwesomeAssert
     const std::ios_base::fmtflags flags(os.flags());
 
     os << std::boolalpha
-      << TColor::Bright << info.file_name << ":" << info.line_number << ": " << info.function_name << ": "
-      << TColor::Grey   << "Assertion"
-      << TColor::None   << " `"
-                        << expression_colorizer(info.comment, info.expression)
-                        << "', with expansion `"
-                        << info.expression
-                        << "', "
-      << TColor::Red    << "failed"
-      << TColor::None   << ".\n"
+      << msg::location_info << info.file_name << ":" << info.line_number << ": " << info.function_name << ": "
+      << msg::heading       << "Assertion"
+      << msg::plain_text    << " `"
+                            << expression_colorizer(info.comment, info.expression)
+                            << "', with expansion `"
+                            << info.expression
+                            << "', "
+      << msg::error         << "failed"
+      << msg::plain_text    << ".\n"
       ;
     os.flags(flags);
     return os;

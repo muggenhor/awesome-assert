@@ -26,17 +26,22 @@
 
 namespace AwesomeAssert
 {
-  enum class AWESOME_EXPORT TColor
+  enum class AWESOME_EXPORT msg
   {
-    None,
-    Red,
-    Cyan,
-    Yellow,
-    Grey,
-    Bright
+    plain_text,
+    expression,
+    operator_,
+    error,
+    heading,
+    location_info,
+    title,
   };
 
-  AWESOME_EXPORT std::ostream& operator<<(std::ostream& os, TColor color);
+  /**
+   * Overridable extension point allowing for the customization of formatting based on the following
+   * message content.
+   */
+  AWESOME_EXPORT std::ostream& operator<<(std::ostream& os, msg type);
 
 #ifdef _WIN32
   using native_handle_t = void*;
