@@ -32,6 +32,12 @@
   #define AWESOME_OVERRIDE
 #endif
 
+#if __cplusplus >= 201402L /* Visual Studio doesn't support relaxed 'constexpr' */
+  #define AWESOME_CXX14_CONSTEXPR constexpr
+#else
+  #define AWESOME_CXX14_CONSTEXPR
+#endif
+
 #ifndef AWESOME_PRECONDITION_NO_NOEXCEPT
   #define AWESOME_PRECONDITION_NOEXCEPT noexcept
 #else
@@ -89,7 +95,7 @@ namespace AwesomeAssert
         : ptr(nullptr)
       {}
 
-      stringifier_ptr(stringifier_ptr&& rhs) noexcept
+      AWESOME_CXX14_CONSTEXPR stringifier_ptr(stringifier_ptr&& rhs) noexcept
         : ptr(rhs.ptr)
       {
         rhs.ptr = nullptr;
@@ -313,7 +319,7 @@ namespace AwesomeAssert
       {
       }
 
-      bool_expression(bool_expression&& rhs) noexcept = default;
+      AWESOME_CXX14_CONSTEXPR bool_expression(bool_expression&& rhs) noexcept = default;
       bool_expression& operator=(bool_expression&& rhs) noexcept = default;
 
       const_iterator begin() const noexcept;
@@ -409,28 +415,28 @@ namespace AwesomeAssert
 
   struct AWESOME_EXPORT violation_info
   {
-    violation_info() noexcept;
-    violation_info(
+    constexpr violation_info() noexcept = default;
+    AWESOME_CXX14_CONSTEXPR violation_info(violation_info&& rhs) noexcept = default;
+
+    AWESOME_CXX14_CONSTEXPR violation_info(
         const char*                     file
       , int                             line
       , const char*                     function
       , const char*                     expr_str
-      , detail::bool_expression         expr
-      ) noexcept;
-    violation_info(violation_info&& rhs) noexcept
-      : line_number  (rhs.line_number  )
-      , file_name    (rhs.file_name    )
-      , function_name(rhs.function_name)
-      , comment      (rhs.comment      )
-      , expression   (std::move(rhs.expression))
+      , detail::bool_expression&&       expr
+      ) noexcept
+      : line_number{line}
+      , file_name{file}
+      , function_name{function}
+      , comment{expr_str}
+      , expression{std::move(expr)}
     {
     }
 
-
-    int                     line_number;
-    const char*             file_name;
-    const char*             function_name;
-    const char*             comment;
+    int                     line_number   = -1;
+    const char*             file_name     = nullptr;
+    const char*             function_name = nullptr;
+    const char*             comment       = nullptr;
     detail::bool_expression expression;
   };
 

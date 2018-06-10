@@ -284,30 +284,6 @@ namespace detail
   }
 }
 
-violation_info::violation_info() noexcept
-  : line_number(-1)
-  , file_name(nullptr)
-  , function_name(nullptr)
-  , comment(nullptr)
-  , expression(true /* aka no failure */)
-{
-}
-
-violation_info::violation_info(
-    const char*                     file
-  , int                             line
-  , const char*                     function
-  , const char*                     expr_str
-  , detail::bool_expression         expr
-  ) noexcept
-  : line_number(line)
-  , file_name(file)
-  , function_name(function)
-  , comment(expr_str)
-  , expression(std::move(expr))
-{
-}
-
 namespace
 {
   std::string assert_fail_to_string(const violation_info& info)

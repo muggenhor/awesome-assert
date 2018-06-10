@@ -19,6 +19,7 @@ compiler:
   - gcc
 env:
   - CMAKE_CXX_STANDARD=11
+  - CMAKE_CXX_STANDARD=14
 matrix:
   exclude:
     - compiler: clang
@@ -27,6 +28,8 @@ matrix:
       env: CPPCHECK=yes
     - os: osx
       compiler: gcc
+    - compiler: gcc
+      env: CMAKE_CXX_STANDARD=14
 before_install:
   - if [[ "${TRAVIS_OS_NAME}" = "osx" ]]; then brew update && brew install ninja; fi
 script:
