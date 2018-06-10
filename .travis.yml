@@ -2,34 +2,28 @@ language: cpp
 dist: trusty
 addons:
   apt:
-    packages:
-      - clang # to get an updated version including scan-build
-      - cmake
-      - cmake-data
-      - cppcheck
-      - g++-4.7
+    packages: &global_pkgs
       - ninja-build
-    sources:
-      - george-edison55-precise-backports
+    sources: &toolchain_sources
+      - sourceline: 'ppa:ubuntu-toolchain-r/test'
 os:
   - linux
   - osx
 compiler:
   - clang
-  - gcc
 env:
   - CMAKE_CXX_STANDARD=11
   - CMAKE_CXX_STANDARD=14
 matrix:
-  exclude:
-    - compiler: clang
-      env: CPPCHECK=yes
-    - os: osx
-      env: CPPCHECK=yes
-    - os: osx
+  include:
+    - os: linux
       compiler: gcc
-    - compiler: gcc
-      env: CMAKE_CXX_STANDARD=14
+      env: CMAKE_CXX_STANDARD=11 CMAKE_CXX_COMPILER=/usr/bin/g++-4.7
+      addons: {apt: {packages: [*global_pkgs, g++-4.7]}}
+    - os: linux
+      compiler: gcc
+      env: CMAKE_CXX_STANDARD=14 CMAKE_CXX_COMPILER=/usr/bin/g++-5
+      addons: {apt: {packages: [*global_pkgs, g++-5], sources: *toolchain_sources}}
 before_install:
   - if [[ "${TRAVIS_OS_NAME}" = "osx" ]]; then brew update && brew install ninja; fi
 script:
