@@ -241,6 +241,7 @@ namespace AwesomeAssert
 
   namespace detail
   {
+    // Must be inline to ensure the compiler has the full body available for constant propagation
     inline stringifier_ptr::~stringifier_ptr() noexcept
     {
       delete ptr;
