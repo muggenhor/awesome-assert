@@ -179,7 +179,10 @@ namespace AwesomeAssert
       case msg::operator_:          return os << TColor::Yellow;
       case msg::error:              return os << TColor::Red;
       case msg::heading:            return os << TColor::Grey;
-      case msg::location_info:      [[fallthrough]];
+      case msg::location_info:
+#if __cplusplus >= 201703L
+                                    [[fallthrough]];
+#endif
       case msg::title:              return os << TColor::Bright;
     }
   }

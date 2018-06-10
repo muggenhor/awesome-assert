@@ -24,6 +24,10 @@ matrix:
       compiler: gcc
       env: CMAKE_CXX_STANDARD=14 CMAKE_CXX_COMPILER=/usr/bin/g++-5
       addons: {apt: {packages: [*global_pkgs, g++-5], sources: *toolchain_sources}}
+    - os: linux
+      compiler: gcc
+      env: CMAKE_CXX_STANDARD=17 CMAKE_CXX_COMPILER=/usr/bin/g++-7
+      addons: {apt: {packages: [*global_pkgs, g++-7], sources: *toolchain_sources}}
 before_install:
   - if [[ "${TRAVIS_OS_NAME}" = "osx" ]]; then brew update && brew install ninja; fi
 script:
