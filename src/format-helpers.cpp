@@ -93,44 +93,50 @@ namespace AwesomeAssert
       const char* _op;
       const char* _rhs;
     };
+
+    bool isatty(std::ostream& os)
+    {
+      if (!os.rdbuf())
+        return false;
+
+#if _XOPEN_VERSION >= 700 || _POSIX_VERSION >= 200112L
+#if __GLIBCXX__
+      // Support for glibc++: query the actual file-descriptor, can work for other things than stdout/stderr too
+      if (__gnu_cxx::stdio_sync_filebuf<char>* rdbuf = dynamic_cast<__gnu_cxx::stdio_sync_filebuf<char>*>(os.rdbuf()))
+      {
+        if (auto file = rdbuf->file())
+          return ::isatty(fileno(rdbuf->file()));
+      }
+#elif _LIBCPP_VERSION
+      // NOTE: the same isn't possible for Clang/libc++ because it hides the RTTI required to perform a dynamic_cast
+      //       to std::__stdoutbuf<char> from its dynamic symbol table. (The lacking private access is something that
+      //       could be worked around in a standards-compliant way, this cannot.)
+#endif
+
+      if (os.rdbuf() == std::cout.rdbuf())
+        return ::isatty(STDOUT_FILENO);
+      if (os.rdbuf() == std::cerr.rdbuf())
+        return ::isatty(STDERR_FILENO);
+#endif
+
+      return false;
+    }
   }
 
   std::ostream& operator<<(std::ostream& os, TColor color)
   {
-    if (!os
-     || !os.rdbuf())
+    if (!isatty(os))
       return os;
 
 #if _XOPEN_VERSION >= 700 || _POSIX_VERSION >= 200112L
-    bool is_a_tty = false;
-#if __GLIBCXX__
-    // Support for glibc++: query the actual file-descriptor, can work for other things than stdout/stderr too
-    if (__gnu_cxx::stdio_sync_filebuf<char>* rdbuf = dynamic_cast<__gnu_cxx::stdio_sync_filebuf<char>*>(os.rdbuf()))
+    switch (color)
     {
-      is_a_tty = rdbuf->file() && isatty(fileno(rdbuf->file()));
-    }
-#elif _LIBCPP_VERSION
-    // NOTE: the same isn't possible for Clang/libc++ because it hides the RTTI required to perform a dynamic_cast
-    //       to std::__stdoutbuf<char> from its dynamic symbol table. (The lacking private access is something that
-    //       could be worked around in a standards-compliant way, this cannot.)
-#endif
-
-    is_a_tty = is_a_tty
-     || (os.rdbuf() == std::cout.rdbuf() && isatty(STDOUT_FILENO))
-     || (os.rdbuf() == std::cerr.rdbuf() && isatty(STDERR_FILENO))
-     ;
-
-    if (is_a_tty)
-    {
-      switch (color)
-      {
-          case TColor::Red:         return os.write("\033[22;31m", 8);
-          case TColor::Cyan:        return os.write("\033[22;36m", 8);
-          case TColor::Yellow:      return os.write("\033[22;33m", 8);
-          case TColor::Grey:        return os.write("\033[1;30m", 7);
-          case TColor::Bright:      return os.write("\033[1;39m", 7);
-          case TColor::None:        return os.write("\033[22;39m", 8);
-      }
+      case TColor::Red:         return os.write("\033[22;31m", 8);
+      case TColor::Cyan:        return os.write("\033[22;36m", 8);
+      case TColor::Yellow:      return os.write("\033[22;33m", 8);
+      case TColor::Grey:        return os.write("\033[1;30m", 7);
+      case TColor::Bright:      return os.write("\033[1;39m", 7);
+      case TColor::None:        return os.write("\033[22;39m", 8);
     }
 #endif
 
