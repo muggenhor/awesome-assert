@@ -283,18 +283,41 @@ namespace AwesomeAssert
     public:
       struct AWESOME_EXPORT const_iterator : std::iterator<std::forward_iterator_tag, const stringifier>
       {
-        const_iterator() noexcept;
-        const_iterator(const stringifier* cur_) noexcept;
-        const_iterator& operator++() noexcept;
-        const_iterator operator++(int) noexcept;
-        stringifier const& operator*() const noexcept;
-        stringifier const* operator->() const noexcept;
-        bool operator==(const const_iterator& rhs) const noexcept;
-        bool operator!=(const const_iterator& rhs) const noexcept;
+        constexpr explicit const_iterator() noexcept = default;
+        constexpr explicit const_iterator(const stringifier* cur_) noexcept
+          : cur{cur_}
+        {
+        }
+
+        const_iterator& operator++() noexcept
+        {
+          cur = cur->next.get();
+          return *this;
+        }
+
+        const_iterator operator++(int) noexcept
+        {
+          auto prev = *this;
+          ++*this;
+          return prev;
+        }
+
+        constexpr stringifier const& operator *() const noexcept { return *cur; }
+        constexpr stringifier const* operator->() const noexcept { return  cur; }
+
+        constexpr bool operator==(const const_iterator& rhs) const noexcept
+        {
+          return this->cur == rhs.cur;
+        }
+
+        constexpr bool operator!=(const const_iterator& rhs) const noexcept
+        {
+          return !(*this == rhs);
+        }
 
       private:
         //! non-owning pointer, raw pointers are never owners
-        const stringifier* cur;
+        const stringifier* cur = nullptr;
       };
 
       typedef const_iterator iterator;
@@ -323,13 +346,20 @@ namespace AwesomeAssert
       AWESOME_CXX14_CONSTEXPR bool_expression(bool_expression&& rhs) noexcept = default;
       bool_expression& operator=(bool_expression&& rhs) noexcept = default;
 
-      const_iterator begin() const noexcept;
-      const_iterator end() const noexcept;
+      constexpr const_iterator begin() const noexcept
+      {
+        return const_iterator{fail_expression.get()};
+      }
+
+      constexpr const_iterator end() const noexcept
+      {
+        return const_iterator{};
+      }
 
       // Must be inline, along with all code that can potentially change fail_expression's value.
       // This to ensure the compiler has the opportunity to determine that the asserted condition
       // is equal to fail_expression not being NULL.
-      explicit operator bool() const noexcept
+      constexpr explicit operator bool() const noexcept
       {
         return !fail_expression;
       }
