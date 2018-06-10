@@ -372,7 +372,8 @@ namespace AwesomeAssert
     template <typename T>
     struct expression_lhs
     {
-      expression_lhs(T lhs_)
+      constexpr expression_lhs(T lhs_)
+        noexcept(noexcept(T{std::move(lhs_)}))
         : val(std::move(lhs_))
       {}
 
@@ -387,13 +388,15 @@ namespace AwesomeAssert
       // have higher precedence than comparison operators, but they're not without this because we
       // use left shift in expression_decomposer.
       template <typename R>
-      friend auto operator<<(expression_lhs<T> lhs, R&& rhs)
+      friend constexpr auto operator<<(expression_lhs<T> lhs, R&& rhs)
+        noexcept(noexcept(std::move(lhs.val) << std::forward<R>(rhs)))
         -> expression_lhs<decltype(T() << std::forward<R>(rhs))>
       {
         return std::move(lhs.val) << std::forward<R>(rhs);
       }
       template <typename R>
-      friend auto operator>>(expression_lhs<T> lhs, R&& rhs)
+      friend constexpr auto operator>>(expression_lhs<T> lhs, R&& rhs)
+        noexcept(noexcept(std::move(lhs.val) >> std::forward<R>(rhs)))
         -> expression_lhs<decltype(T() >> std::forward<R>(rhs))>
       {
         return std::move(lhs.val) >> std::forward<R>(rhs);
@@ -407,7 +410,9 @@ namespace AwesomeAssert
     struct expression_decomposer
     {
       template <typename T>
-      expression_lhs<typename std::remove_reference<T>::type> operator<<(T&& lhs)
+      constexpr
+      expression_lhs<typename std::remove_reference<T>::type> operator<<(T&& lhs) const
+        noexcept(noexcept(expression_lhs<typename std::remove_reference<T>::type>(std::forward<T>(lhs))))
       {
         return expression_lhs<typename std::remove_reference<T>::type>(std::forward<T>(lhs));
       }
