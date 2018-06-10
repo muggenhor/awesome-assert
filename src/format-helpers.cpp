@@ -191,7 +191,7 @@ namespace AwesomeAssert
     for (const auto& token : expr)
     {
       if (!first)
-        os << os.fill();
+        os << ' ';
       else
         first = false;
       os << (is_operator ? msg::operator_ : msg::expression);
