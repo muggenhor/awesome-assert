@@ -25,7 +25,7 @@
 #include <sstream>
 #include <string>
 
-#ifdef __GNUC__
+#if defined(__GNUC__) || defined(__clang__)
   #define AWESOME_ATTR_WEAK __attribute__((__weak__))
 #else
   #define AWESOME_ATTR_WEAK
