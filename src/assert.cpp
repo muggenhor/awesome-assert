@@ -239,7 +239,7 @@ namespace
   {
     std::ostringstream os;
     assert_fail_default_log(os, info);
-    return os.str();
+    return std::move(os).str();
   }
 }
 
