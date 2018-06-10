@@ -208,13 +208,6 @@ namespace detail
 
   std::ostream& operator<<(std::ostream& os, const bool_expression& expr)
   {
-    if (expr.begin() == expr.end())
-    {
-      os << TColor::Cyan;
-      if (os.good())
-        os << true;
-    }
-
     bool is_operator = false;
     bool first = true;
     for (const auto& token : expr)
@@ -227,6 +220,13 @@ namespace detail
       if (os.good())
         os << token;
       is_operator = !is_operator;
+    }
+
+    if (first)
+    {
+      os << TColor::Cyan;
+      if (os.good())
+        os << true;
     }
 
     return os << TColor::None;
