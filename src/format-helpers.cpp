@@ -112,7 +112,7 @@ namespace AwesomeAssert
     if (__gnu_cxx::stdio_sync_filebuf<char>* rdbuf = dynamic_cast<__gnu_cxx::stdio_sync_filebuf<char>*>(os.rdbuf()))
     {
       if (auto file = rdbuf->file())
-        return fileno(rdbuf->file());
+        return fileno(file);
     }
 #elif _LIBCPP_VERSION
     // NOTE: the same isn't possible for Clang/libc++ because it hides the RTTI required to perform a dynamic_cast
@@ -185,6 +185,8 @@ namespace AwesomeAssert
 #endif
       case msg::title:              return os << TColor::Bright;
     }
+
+    return os;
   }
 
   std::ostream& detail::operator<<(std::ostream& os, const bool_expression& expr)
