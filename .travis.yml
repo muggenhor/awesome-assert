@@ -12,14 +12,10 @@ os:
 compiler:
   - clang
 env:
-  - CMAKE_CXX_STANDARD=11
   - CMAKE_CXX_STANDARD=14
+  - CMAKE_CXX_STANDARD=17
 matrix:
   include:
-    - os: linux
-      compiler: gcc
-      env: CMAKE_CXX_STANDARD=11 CMAKE_CXX_COMPILER=/usr/bin/g++-4.7
-      addons: {apt: {packages: [*global_pkgs, g++-4.7]}}
     - os: linux
       compiler: gcc
       env: CMAKE_CXX_STANDARD=14 CMAKE_CXX_COMPILER=/usr/bin/g++-5

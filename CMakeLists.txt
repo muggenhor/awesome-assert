@@ -73,6 +73,7 @@ target_compile_features(${PROJECT_NAME}_static PUBLIC
   cxx_nullptr
   cxx_override
   cxx_range_for
+  cxx_relaxed_constexpr
   cxx_rvalue_references
   cxx_static_assert
   cxx_strong_enums

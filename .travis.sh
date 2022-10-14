@@ -19,7 +19,7 @@ ${SCAN_BUILD_CMD} cmake -E chdir build cmake \
 
 if [ "x${CPPCHECK:-}" = "xyes" ]; then
   cppcheck --template "{file}:{line}: {severity} ({id}): {message}" \
-    --enable=style --force --std=c++11 -j 8 \
+    --enable=style --force --std=c++14 -j 8 \
     -U__FUNCSIG__ -U_MSC_VER \
     -U__GNUC__ -U__clang__ -U__GLIBCXX__ -U_LIBCPP_VERSION \
     -Iinclude -Ibuild/include/awesome \

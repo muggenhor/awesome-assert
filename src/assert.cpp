@@ -115,7 +115,7 @@ void assert_fail_default_log(const violation_info& info) noexcept
 
 namespace
 {
-  AWESOME_NORETURN
+  [[noreturn]]
   void assert_failed_default(violation_info in_info) noexcept
   {
     // To get abort(), regardless of which namespace it's in.

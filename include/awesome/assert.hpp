@@ -26,18 +26,6 @@
 #include <iterator>
 #include <stdexcept>
 
-#if __cplusplus >= 201103L || (defined(_MSC_VER) && _MSC_VER >= 1700) /* Visual Studio 2012 supports 'override' */
-  #define AWESOME_OVERRIDE override
-#else
-  #define AWESOME_OVERRIDE
-#endif
-
-#if __cplusplus >= 201402L || (defined(_MSC_VER) && _MSC_VER >= 1910) /* Visual Studio 2017 supports relaxed 'constexpr' */
-  #define AWESOME_CXX14_CONSTEXPR constexpr
-#else
-  #define AWESOME_CXX14_CONSTEXPR
-#endif
-
 #ifndef AWESOME_PRECONDITION_NO_NOEXCEPT
   #define AWESOME_PRECONDITION_NOEXCEPT noexcept
 #else
@@ -54,17 +42,6 @@
   #define AWESOME_POSTCONDITION_NOEXCEPT noexcept
 #else
   #define AWESOME_POSTCONDITION_NOEXCEPT
-#endif
-
-#if   defined(_MSC_VER)
-  #define AWESOME_NORETURN __declspec(noreturn)
-#elif defined(__GNUC__) || defined(__clang__)
-  #define AWESOME_NORETURN __attribute__ ((__noreturn__))
-#else
-  // Unfortunately some versions of GCC (4.7) with -std=c++0x claim to be C++11
-  // without supporting either attributes or the [[noreturn]] attribute. Which
-  // is why we're using GCC's own __noreturn__ attribute above first.
-  #define AWESOME_NORETURN [[noreturn]]
 #endif
 
 // Helps preventing C4910 on MSVC: '__declspec(dllexport)' and 'extern' are incompatible on an explicit instantiation
@@ -95,7 +72,7 @@ namespace AwesomeAssert
         : ptr(nullptr)
       {}
 
-      AWESOME_CXX14_CONSTEXPR stringifier_ptr(stringifier_ptr&& rhs) noexcept
+      constexpr stringifier_ptr(stringifier_ptr&& rhs) noexcept
         : ptr(rhs.ptr)
       {
         rhs.ptr = nullptr;
@@ -116,22 +93,22 @@ namespace AwesomeAssert
         return *this;
       }
 
-      AWESOME_CXX14_CONSTEXPR       stringifier& operator *()       noexcept { return *ptr; }
-      AWESOME_CXX14_CONSTEXPR const stringifier& operator *() const noexcept { return *ptr; }
-      AWESOME_CXX14_CONSTEXPR       stringifier* operator->()       noexcept { return  ptr; }
-      AWESOME_CXX14_CONSTEXPR const stringifier* operator->() const noexcept { return  ptr; }
-      AWESOME_CXX14_CONSTEXPR       stringifier*        get()       noexcept { return  ptr; }
-      AWESOME_CXX14_CONSTEXPR const stringifier*        get() const noexcept { return  ptr; }
+      constexpr       stringifier& operator *()       noexcept { return *ptr; }
+      constexpr const stringifier& operator *() const noexcept { return *ptr; }
+      constexpr       stringifier* operator->()       noexcept { return  ptr; }
+      constexpr const stringifier* operator->() const noexcept { return  ptr; }
+      constexpr       stringifier*        get()       noexcept { return  ptr; }
+      constexpr const stringifier*        get() const noexcept { return  ptr; }
 
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable:4800)
 #endif
-      AWESOME_CXX14_CONSTEXPR explicit operator bool() const noexcept { return static_cast<bool>(ptr); }
+      constexpr explicit operator bool() const noexcept { return static_cast<bool>(ptr); }
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
-      AWESOME_CXX14_CONSTEXPR bool     operator !   () const noexcept { return !ptr; }
+      constexpr bool     operator !   () const noexcept { return !ptr; }
 
     private:
       stringifier* ptr = nullptr;
@@ -181,7 +158,7 @@ namespace AwesomeAssert
       : val(std::forward<T>(val_))
     {}
 
-    std::ostream& convert(std::ostream& os) const AWESOME_OVERRIDE
+    std::ostream& convert(std::ostream& os) const override
     {
       return os << val;
     }
@@ -227,17 +204,17 @@ namespace AwesomeAssert
     //! Internal marker type in the hierarchy for retrieving operators
     struct AWESOME_EXPORT string_maker_op : stringifier
     {
-      std::ostream& convert(std::ostream& os) const AWESOME_OVERRIDE;
+      std::ostream& convert(std::ostream& os) const override;
       virtual const char* str() const noexcept = 0;
     };
   }
 
-  template <> struct AWESOME_EXPORT string_maker<detail::compare_eq> : detail::string_maker_op { const char* str() const noexcept AWESOME_OVERRIDE; };
-  template <> struct AWESOME_EXPORT string_maker<detail::compare_ne> : detail::string_maker_op { const char* str() const noexcept AWESOME_OVERRIDE; };
-  template <> struct AWESOME_EXPORT string_maker<detail::compare_lt> : detail::string_maker_op { const char* str() const noexcept AWESOME_OVERRIDE; };
-  template <> struct AWESOME_EXPORT string_maker<detail::compare_le> : detail::string_maker_op { const char* str() const noexcept AWESOME_OVERRIDE; };
-  template <> struct AWESOME_EXPORT string_maker<detail::compare_gt> : detail::string_maker_op { const char* str() const noexcept AWESOME_OVERRIDE; };
-  template <> struct AWESOME_EXPORT string_maker<detail::compare_ge> : detail::string_maker_op { const char* str() const noexcept AWESOME_OVERRIDE; };
+  template <> struct AWESOME_EXPORT string_maker<detail::compare_eq> : detail::string_maker_op { const char* str() const noexcept override; };
+  template <> struct AWESOME_EXPORT string_maker<detail::compare_ne> : detail::string_maker_op { const char* str() const noexcept override; };
+  template <> struct AWESOME_EXPORT string_maker<detail::compare_lt> : detail::string_maker_op { const char* str() const noexcept override; };
+  template <> struct AWESOME_EXPORT string_maker<detail::compare_le> : detail::string_maker_op { const char* str() const noexcept override; };
+  template <> struct AWESOME_EXPORT string_maker<detail::compare_gt> : detail::string_maker_op { const char* str() const noexcept override; };
+  template <> struct AWESOME_EXPORT string_maker<detail::compare_ge> : detail::string_maker_op { const char* str() const noexcept override; };
 
   namespace detail
   {
@@ -289,13 +266,13 @@ namespace AwesomeAssert
         {
         }
 
-        AWESOME_CXX14_CONSTEXPR const_iterator& operator++() noexcept
+        constexpr const_iterator& operator++() noexcept
         {
           cur = cur->next.get();
           return *this;
         }
 
-        AWESOME_CXX14_CONSTEXPR const_iterator operator++(int) noexcept
+        constexpr const_iterator operator++(int) noexcept
         {
           auto prev = *this;
           ++*this;
@@ -343,15 +320,15 @@ namespace AwesomeAssert
       {
       }
 
-      AWESOME_CXX14_CONSTEXPR bool_expression(bool_expression&& rhs) noexcept = default;
+      constexpr bool_expression(bool_expression&& rhs) noexcept = default;
       bool_expression& operator=(bool_expression&& rhs) noexcept = default;
 
-      AWESOME_CXX14_CONSTEXPR const_iterator begin() const noexcept
+      constexpr const_iterator begin() const noexcept
       {
         return const_iterator{fail_expression.get()};
       }
 
-      AWESOME_CXX14_CONSTEXPR const_iterator end() const noexcept
+      constexpr const_iterator end() const noexcept
       {
         return const_iterator{};
       }
@@ -359,7 +336,7 @@ namespace AwesomeAssert
       // Must be inline, along with all code that can potentially change fail_expression's value.
       // This to ensure the compiler has the opportunity to determine that the asserted condition
       // is equal to fail_expression not being NULL.
-      AWESOME_CXX14_CONSTEXPR explicit operator bool() const noexcept
+      constexpr explicit operator bool() const noexcept
       {
         return !fail_expression;
       }
@@ -452,9 +429,9 @@ namespace AwesomeAssert
   struct AWESOME_EXPORT violation_info
   {
     constexpr violation_info() noexcept = default;
-    AWESOME_CXX14_CONSTEXPR violation_info(violation_info&& rhs) noexcept = default;
+    constexpr violation_info(violation_info&& rhs) noexcept = default;
 
-    AWESOME_CXX14_CONSTEXPR violation_info(
+    constexpr violation_info(
         const char*                     file
       , int                             line
       , const char*                     function
@@ -515,7 +492,7 @@ namespace AwesomeAssert
    * asserted condition is met.  The \c noexcept tells the compiler it doesn't have to produce stack unwinding
    * information for exceptions, giving another optimisation opportunity.
    */
-  AWESOME_NORETURN AWESOME_EXPORT
+  [[noreturn]] AWESOME_EXPORT
   void assert_failed_precondition(
       const char*                     file
     , int                             line
@@ -524,7 +501,7 @@ namespace AwesomeAssert
     , detail::bool_expression         expr
     ) AWESOME_PRECONDITION_NOEXCEPT;
 
-  AWESOME_NORETURN AWESOME_EXPORT
+  [[noreturn]] AWESOME_EXPORT
   void assert_failed_invariant(
       const char*                     file
     , int                             line
@@ -533,7 +510,7 @@ namespace AwesomeAssert
     , detail::bool_expression         expr
     ) AWESOME_INVARIANT_NOEXCEPT;
 
-  AWESOME_NORETURN AWESOME_EXPORT
+  [[noreturn]] AWESOME_EXPORT
   void assert_failed_postcondition(
       const char*                     file
     , int                             line
