@@ -145,4 +145,5 @@ add_test(NAME ${PROJECT_NAME}.Test.simple.success
 set_tests_properties(${PROJECT_NAME}.Test.simple.failure
   PROPERTIES
     PASS_REGULAR_EXPRESSION "Assertion `argc >= 10 - argc', with expansion `1 >= 9', failed"
+    ENVIRONMENT "CLICOLOR=0;CLICOLOR_FORCE=0"
 )

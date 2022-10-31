@@ -20,6 +20,7 @@
 
 #include <awesome/assert.hpp>
 #include <awesome/assert/format-helpers.hpp>
+#include <cstdlib>
 #include <cstring>
 #include <iostream>
 
@@ -132,8 +133,32 @@ namespace AwesomeAssert
   AWESOME_ATTR_WEAK
   bool use_colors(std::ostream& os) noexcept
   {
+    // Force or suppress colors according to http://bixense.com/clicolors/ convention.
+    static const auto clicolor_force = [] {
+      const char* const envvar = std::getenv("CLICOLOR_FORCE");
+      if (!envvar)
+        return false;
+      return std::strcmp(envvar, "0") != 0;
+    }();
+
+    if (clicolor_force)
+      return true;
+
+    static const auto clicolor_disable = [] {
+      const char* const envvar = std::getenv("CLICOLOR");
+      if (!envvar)
+        return false;
+      return std::strcmp(envvar, "0") == 0;
+    }();
+
+    if (clicolor_disable)
+      return false;
+
     const auto handle = get_stream_handle(os);
-    return handle == invalid_native_handle ? false : ::isatty(handle);
+    if (handle == invalid_native_handle)
+      return false;
+
+    return ::isatty(handle);
   }
 
   namespace
