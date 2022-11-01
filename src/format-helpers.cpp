@@ -133,6 +133,19 @@ namespace AwesomeAssert
   AWESOME_ATTR_WEAK
   bool use_colors(std::ostream& os) noexcept
   {
+    // Suppress colors according to https://no-color.org/ convention.
+    static const auto no_color = [] {
+      const char* const envvar = std::getenv("NO_COLOR");
+      if (!envvar)
+        return false;
+
+      // non-empty content of NO_COLOR env var should disable color
+      return envvar[0] != '\0';
+    }();
+
+    if (no_color)
+      return false;
+
     // Force or suppress colors according to http://bixense.com/clicolors/ convention.
     static const auto clicolor_force = [] {
       const char* const envvar = std::getenv("CLICOLOR_FORCE");
