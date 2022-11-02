@@ -86,6 +86,11 @@ int main(int argc, char**)
   val = 42;
   AWESOME_EXPECTS(1 > val || val > 10);
 
+  // bitmasks
+  const int perms = 0755;
+  constexpr const int executable = 1;
+  AWESOME_EXPECTS(perms & executable);
+
   AWESOME_EXPECTS(
       argc >= 10 - argc
    && "not enough command line arguments given"

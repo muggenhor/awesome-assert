@@ -200,6 +200,7 @@ namespace AwesomeAssert
   template <> struct AWESOME_EXPORT string_maker<::std::   less_equal<>> : detail::string_maker_op { const char* str() const noexcept override; };
   template <> struct AWESOME_EXPORT string_maker<::std::greater      <>> : detail::string_maker_op { const char* str() const noexcept override; };
   template <> struct AWESOME_EXPORT string_maker<::std::greater_equal<>> : detail::string_maker_op { const char* str() const noexcept override; };
+  template <> struct AWESOME_EXPORT string_maker<::std::    bit_and  <>> : detail::string_maker_op { const char* str() const noexcept override; };
   template <> struct AWESOME_EXPORT string_maker<::std::logical_and  <>> : detail::string_maker_op { const char* str() const noexcept override; };
   template <> struct AWESOME_EXPORT string_maker<::std::logical_or   <>> : detail::string_maker_op { const char* str() const noexcept override; };
 
@@ -224,6 +225,7 @@ namespace AwesomeAssert
     inline auto create_expression_list(::std::   less_equal<> val) { return stringifier_ptr(new string_maker<decltype(val)>()); }
     inline auto create_expression_list(::std::greater      <> val) { return stringifier_ptr(new string_maker<decltype(val)>()); }
     inline auto create_expression_list(::std::greater_equal<> val) { return stringifier_ptr(new string_maker<decltype(val)>()); }
+    inline auto create_expression_list(::std::    bit_and  <> val) { return stringifier_ptr(new string_maker<decltype(val)>()); }
     inline auto create_expression_list(::std::logical_and  <> val) { return stringifier_ptr(new string_maker<decltype(val)>()); }
     inline auto create_expression_list(::std::logical_or   <> val) { return stringifier_ptr(new string_maker<decltype(val)>()); }
 
@@ -456,6 +458,8 @@ namespace AwesomeAssert
       friend constexpr auto operator> (expression_lhs<T> lhs, R&& rhs) { return expression_binary<T, ::std::greater      <>, R>{std::forward<T>(lhs.val), std::forward<R>(rhs)}; }
       template <class R, typename std::enable_if<!is_unary_expression<typename std::remove_cv<typename std::remove_reference<R>::type>::type>::value>::type* = nullptr>
       friend constexpr auto operator>=(expression_lhs<T> lhs, R&& rhs) { return expression_binary<T, ::std::greater_equal<>, R>{std::forward<T>(lhs.val), std::forward<R>(rhs)}; }
+      template <class R, typename std::enable_if<!is_unary_expression<typename std::remove_cv<typename std::remove_reference<R>::type>::type>::value>::type* = nullptr>
+      friend constexpr auto operator& (expression_lhs<T> lhs, R&& rhs) { return expression_binary<T, ::std::    bit_and  <>, R>{std::forward<T>(lhs.val), std::forward<R>(rhs)}; }
 
       template <typename R, typename std::enable_if<!is_unary_expression<typename std::remove_cv<typename std::remove_reference<R>::type>::type>::value>::type* = nullptr>
       friend constexpr auto operator&&(expression_lhs<T> lhs, R&& rhs)
@@ -535,6 +539,8 @@ namespace AwesomeAssert
       friend constexpr auto operator> (L&& lhs, expression_rhs<T> rhs) { return expression_binary<L, ::std::greater      <>, T>{std::forward<L>(lhs), std::forward<T>(rhs.val)}; }
       template <class L, typename std::enable_if<!is_unary_expression<typename std::remove_cv<typename std::remove_reference<L>::type>::type>::value>::type* = nullptr>
       friend constexpr auto operator>=(L&& lhs, expression_rhs<T> rhs) { return expression_binary<L, ::std::greater_equal<>, T>{std::forward<L>(lhs), std::forward<T>(rhs.val)}; }
+      template <class L, typename std::enable_if<!is_unary_expression<typename std::remove_cv<typename std::remove_reference<L>::type>::type>::value>::type* = nullptr>
+      friend constexpr auto operator& (L&& lhs, expression_rhs<T> rhs) { return expression_binary<L, ::std::    bit_and  <>, T>{std::forward<L>(lhs), std::forward<T>(rhs.val)}; }
 
       template <typename L, typename std::enable_if<!is_unary_expression<typename std::remove_cv<typename std::remove_reference<L>::type>::type>::value>::type* = nullptr>
       friend constexpr auto operator&&(L&& lhs, expression_rhs<T> rhs)
@@ -570,6 +576,7 @@ namespace AwesomeAssert
       template <class L> friend constexpr auto operator<=(expression_lhs<L> lhs, expression_rhs<T> rhs) { return expression_binary<L, ::std::   less_equal<>, T>{std::forward<L>(lhs.val), std::forward<T>(rhs.val)}; }
       template <class L> friend constexpr auto operator> (expression_lhs<L> lhs, expression_rhs<T> rhs) { return expression_binary<L, ::std::greater      <>, T>{std::forward<L>(lhs.val), std::forward<T>(rhs.val)}; }
       template <class L> friend constexpr auto operator>=(expression_lhs<L> lhs, expression_rhs<T> rhs) { return expression_binary<L, ::std::greater_equal<>, T>{std::forward<L>(lhs.val), std::forward<T>(rhs.val)}; }
+      template <class L> friend constexpr auto operator& (expression_lhs<L> lhs, expression_rhs<T> rhs) { return expression_binary<L, ::std::    bit_and  <>, T>{std::forward<L>(lhs.val), std::forward<T>(rhs.val)}; }
       template <class L> friend constexpr auto operator&&(expression_lhs<L> lhs, expression_rhs<T> rhs) { return expression_binary<L, ::std::logical_and  <>, T>{std::forward<L>(lhs.val), std::forward<T>(rhs.val)}; }
       template <class L> friend constexpr auto operator||(expression_lhs<L> lhs, expression_rhs<T> rhs) { return expression_binary<L, ::std::logical_or   <>, T>{std::forward<L>(lhs.val), std::forward<T>(rhs.val)}; }
 
