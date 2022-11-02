@@ -77,8 +77,12 @@ int main(int argc, char**)
 {
   // Compile-test only
   AWESOME_EXPECTS(true);
+  AWESOME_EXPECTS(true && "Uh-oh boolean logic doesn't work!");
 
   AWESOME_ASSERT(move_only(1) << move_only(3) == move_only(8));
 
-  AWESOME_EXPECTS(argc >= 10 - argc);
+  AWESOME_EXPECTS(
+      argc >= 10 - argc
+   && "not enough command line arguments given"
+  );
 }

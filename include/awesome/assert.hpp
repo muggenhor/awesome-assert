@@ -200,6 +200,7 @@ namespace AwesomeAssert
   template <> struct AWESOME_EXPORT string_maker<::std::   less_equal<>> : detail::string_maker_op { const char* str() const noexcept override; };
   template <> struct AWESOME_EXPORT string_maker<::std::greater      <>> : detail::string_maker_op { const char* str() const noexcept override; };
   template <> struct AWESOME_EXPORT string_maker<::std::greater_equal<>> : detail::string_maker_op { const char* str() const noexcept override; };
+  template <> struct AWESOME_EXPORT string_maker<::std::logical_and  <>> : detail::string_maker_op { const char* str() const noexcept override; };
 
   namespace detail
   {
@@ -297,7 +298,7 @@ namespace AwesomeAssert
       }
 
       template <typename TL, typename TO, typename TR>
-      bool_expression(TL&& lhs, TO&& op, TR&& rhs)
+      constexpr bool_expression(TL&& lhs, TO&& op, TR&& rhs)
         : fail_expression(
             static_cast<const TO&>(op)(static_cast<const TL&>(lhs), static_cast<const TR&>(rhs))
                 ? nullptr
@@ -352,6 +353,25 @@ namespace AwesomeAssert
       template <typename R> int operator^= (const R&) { static_assert(TFalse<R>::val, "Expression too complex: rewrite as binary comparison"); return int(); }
       template <typename R> int operator|= (const R&) { static_assert(TFalse<R>::val, "Expression too complex: rewrite as binary comparison"); return int(); }
 
+      // Special case for ASSERT(... && "string-constant failure message")
+      template <std::size_t N>
+      constexpr bool_expression&& operator&&(const char (&message)[N]) &&
+      {
+        if (fail_expression)
+        {
+          // Find the end of the current expression
+          auto cur = fail_expression.get();
+          while (cur->next) cur = cur->next.get();
+
+          stringifier_ptr expr(new string_maker<const char*>{message});
+          expr = prepend<string_maker<::std::logical_and<>>>(std::move(expr));
+
+          cur->next = std::move(expr);
+        }
+
+        return std::move(*this);
+      }
+
     private:
       //! Storing string converters instead of strings to prevent inlining of conversion code.
       //! Either \c NULL or terminated with a \c NULL sentinel. This removes the need for a separate
@@ -375,6 +395,14 @@ namespace AwesomeAssert
       template <class R> friend bool_expression operator<=(expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), ::std::   less_equal<>(), std::forward<R>(rhs)); }
       template <class R> friend bool_expression operator> (expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), ::std::greater      <>(), std::forward<R>(rhs)); }
       template <class R> friend bool_expression operator>=(expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), ::std::greater_equal<>(), std::forward<R>(rhs)); }
+
+      // Special case for ASSERT(... && "string-constant failure message")
+      template <std::size_t N>
+      friend constexpr bool_expression operator&&(expression_lhs<T> lhs, const char (&message)[N])
+      {
+        return bool_expression{
+            std::move(lhs.val), ::std::logical_and<>(), static_cast<const char*>(message)};
+      }
 
       // Necessary to permit usage of these in expressions. They should be allowed because they
       // have higher precedence than comparison operators, but they're not without this because we
