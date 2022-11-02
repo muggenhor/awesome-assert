@@ -70,12 +70,12 @@ template struct AWESOME_EXPORT string_maker<const char*>;
 template struct AWESOME_EXPORT string_maker<const signed char*>;
 template struct AWESOME_EXPORT string_maker<const unsigned char*>;
 
-const char* string_maker<detail::compare_eq>::str() const noexcept { return "=="; }
-const char* string_maker<detail::compare_ne>::str() const noexcept { return "!="; }
-const char* string_maker<detail::compare_lt>::str() const noexcept { return "<" ; }
-const char* string_maker<detail::compare_le>::str() const noexcept { return "<="; }
-const char* string_maker<detail::compare_gt>::str() const noexcept { return ">" ; }
-const char* string_maker<detail::compare_ge>::str() const noexcept { return ">="; }
+const char* string_maker<::std::    equal_to <>>::str() const noexcept { return "=="; }
+const char* string_maker<::std::not_equal_to <>>::str() const noexcept { return "!="; }
+const char* string_maker<::std::   less      <>>::str() const noexcept { return "<" ; }
+const char* string_maker<::std::   less_equal<>>::str() const noexcept { return "<="; }
+const char* string_maker<::std::greater      <>>::str() const noexcept { return ">" ; }
+const char* string_maker<::std::greater_equal<>>::str() const noexcept { return ">="; }
 
 namespace detail
 {

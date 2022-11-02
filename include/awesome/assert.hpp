@@ -22,6 +22,7 @@
 #define INCLUDED_AWESOME_ASSERT_HPP
 
 #include "awesome_export.h"
+#include <functional>
 #include <iosfwd>
 #include <iterator>
 #include <stdexcept>
@@ -191,16 +192,6 @@ namespace AwesomeAssert
 
   namespace detail
   {
-    // Replacements for std::equal, std::less, etc. that have the template on the function instead
-    // of the class. Necessary to permit comparisons of differing types without forcing a conversion.
-    // This gets solved in a later C++ standard (14 or 17, IIRC), but that doesn't help us now.
-    struct compare_eq { template <class TL, class TR> constexpr bool operator()(const TL& lhs, const TR& rhs) const { return lhs == rhs; } };
-    struct compare_ne { template <class TL, class TR> constexpr bool operator()(const TL& lhs, const TR& rhs) const { return lhs != rhs; } };
-    struct compare_lt { template <class TL, class TR> constexpr bool operator()(const TL& lhs, const TR& rhs) const { return lhs <  rhs; } };
-    struct compare_le { template <class TL, class TR> constexpr bool operator()(const TL& lhs, const TR& rhs) const { return lhs <= rhs; } };
-    struct compare_gt { template <class TL, class TR> constexpr bool operator()(const TL& lhs, const TR& rhs) const { return lhs >  rhs; } };
-    struct compare_ge { template <class TL, class TR> constexpr bool operator()(const TL& lhs, const TR& rhs) const { return lhs >= rhs; } };
-
     //! Internal marker type in the hierarchy for retrieving operators
     struct AWESOME_EXPORT string_maker_op : stringifier
     {
@@ -209,12 +200,12 @@ namespace AwesomeAssert
     };
   }
 
-  template <> struct AWESOME_EXPORT string_maker<detail::compare_eq> : detail::string_maker_op { const char* str() const noexcept override; };
-  template <> struct AWESOME_EXPORT string_maker<detail::compare_ne> : detail::string_maker_op { const char* str() const noexcept override; };
-  template <> struct AWESOME_EXPORT string_maker<detail::compare_lt> : detail::string_maker_op { const char* str() const noexcept override; };
-  template <> struct AWESOME_EXPORT string_maker<detail::compare_le> : detail::string_maker_op { const char* str() const noexcept override; };
-  template <> struct AWESOME_EXPORT string_maker<detail::compare_gt> : detail::string_maker_op { const char* str() const noexcept override; };
-  template <> struct AWESOME_EXPORT string_maker<detail::compare_ge> : detail::string_maker_op { const char* str() const noexcept override; };
+  template <> struct AWESOME_EXPORT string_maker<::std::    equal_to <>> : detail::string_maker_op { const char* str() const noexcept override; };
+  template <> struct AWESOME_EXPORT string_maker<::std::not_equal_to <>> : detail::string_maker_op { const char* str() const noexcept override; };
+  template <> struct AWESOME_EXPORT string_maker<::std::   less      <>> : detail::string_maker_op { const char* str() const noexcept override; };
+  template <> struct AWESOME_EXPORT string_maker<::std::   less_equal<>> : detail::string_maker_op { const char* str() const noexcept override; };
+  template <> struct AWESOME_EXPORT string_maker<::std::greater      <>> : detail::string_maker_op { const char* str() const noexcept override; };
+  template <> struct AWESOME_EXPORT string_maker<::std::greater_equal<>> : detail::string_maker_op { const char* str() const noexcept override; };
 
   namespace detail
   {
@@ -384,12 +375,12 @@ namespace AwesomeAssert
         : val(std::move(lhs_))
       {}
 
-      template <class R> friend bool_expression operator==(expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), compare_eq(), std::forward<R>(rhs)); }
-      template <class R> friend bool_expression operator!=(expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), compare_ne(), std::forward<R>(rhs)); }
-      template <class R> friend bool_expression operator< (expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), compare_lt(), std::forward<R>(rhs)); }
-      template <class R> friend bool_expression operator<=(expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), compare_le(), std::forward<R>(rhs)); }
-      template <class R> friend bool_expression operator> (expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), compare_gt(), std::forward<R>(rhs)); }
-      template <class R> friend bool_expression operator>=(expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), compare_ge(), std::forward<R>(rhs)); }
+      template <class R> friend bool_expression operator==(expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), ::std::    equal_to <>(), std::forward<R>(rhs)); }
+      template <class R> friend bool_expression operator!=(expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), ::std::not_equal_to <>(), std::forward<R>(rhs)); }
+      template <class R> friend bool_expression operator< (expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), ::std::   less      <>(), std::forward<R>(rhs)); }
+      template <class R> friend bool_expression operator<=(expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), ::std::   less_equal<>(), std::forward<R>(rhs)); }
+      template <class R> friend bool_expression operator> (expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), ::std::greater      <>(), std::forward<R>(rhs)); }
+      template <class R> friend bool_expression operator>=(expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), ::std::greater_equal<>(), std::forward<R>(rhs)); }
 
       // Necessary to permit usage of these in expressions. They should be allowed because they
       // have higher precedence than comparison operators, but they're not without this because we
