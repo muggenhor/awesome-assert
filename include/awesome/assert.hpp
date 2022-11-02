@@ -115,11 +115,8 @@ namespace AwesomeAssert
       stringifier* ptr = nullptr;
     };
 
-    template <typename T, typename... Args>
-    typename std::enable_if<
-        std::is_base_of<stringifier, T>::value
-      , detail::stringifier_ptr>::type
-    prepend(detail::stringifier_ptr tail, Args&&... args);
+    template <typename T, typename... Args, typename std::enable_if<std::is_base_of<stringifier, T>::value>::type* = nullptr>
+    auto prepend(detail::stringifier_ptr tail, Args&&... args);
 
     struct bool_expression;
   }
@@ -136,11 +133,8 @@ namespace AwesomeAssert
   private:
     friend struct detail::bool_expression;
     // Must be inline to ensure the compiler has the full body available for constant propagation
-    template <typename T, typename... Args>
-    friend typename std::enable_if<
-        std::is_base_of<stringifier, T>::value
-      , detail::stringifier_ptr>::type
-    detail::prepend(detail::stringifier_ptr tail, Args&&... args);
+    template <typename T, typename... Args, typename std::enable_if<std::is_base_of<stringifier, T>::value>::type*>
+    friend auto detail::prepend(detail::stringifier_ptr tail, Args&&... args);
 
     detail::stringifier_ptr next;
   };
@@ -215,11 +209,8 @@ namespace AwesomeAssert
       delete ptr;
     }
 
-    template <typename T, typename... Args>
-    typename std::enable_if<
-        std::is_base_of<stringifier, T>::value
-      , detail::stringifier_ptr>::type
-    prepend(detail::stringifier_ptr tail, Args&&... args)
+    template <typename T, typename... Args, typename std::enable_if<std::is_base_of<stringifier, T>::value>::type*>
+    auto prepend(detail::stringifier_ptr tail, Args&&... args)
     {
       detail::stringifier_ptr head(new T(std::forward<Args>(args)...));
       head->next = std::move(tail);
@@ -233,13 +224,13 @@ namespace AwesomeAssert
     {
     private:
       template <typename T>
-      static stringifier_ptr create_expression_list(T&& val)
+      static auto create_expression_list(T&& val)
       {
         return stringifier_ptr(new string_maker<T>(std::forward<T>(val)));
       }
 
       template <typename TL, typename TO, typename TR>
-      static stringifier_ptr create_expression_list(TL&& lhs, TO&&, TR&& rhs)
+      static auto create_expression_list(TL&& lhs, TO&&, TR&& rhs)
       {
         // Constructing in reverse order because of the linked-list structure
         stringifier_ptr expr(new string_maker<TR>(std::forward<TR>(rhs)));
@@ -409,7 +400,7 @@ namespace AwesomeAssert
     {
       template <typename T>
       constexpr
-      expression_lhs<typename std::remove_reference<T>::type> operator<<(T&& lhs) const
+      auto operator<<(T&& lhs) const
         noexcept(noexcept(expression_lhs<typename std::remove_reference<T>::type>(std::forward<T>(lhs))))
       {
         return expression_lhs<typename std::remove_reference<T>::type>(std::forward<T>(lhs));
