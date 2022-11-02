@@ -23,6 +23,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <vector>
 
 #if __GLIBCXX__
   #include <ext/stdio_sync_filebuf.h>
@@ -44,61 +45,59 @@ namespace AwesomeAssert
   {
     class expression_colorizer
     {
+    struct token_t
+    {
+      msg         msg_type  = msg::expression;
+      const char* str       = nullptr;
+      std::size_t len       = 0;
+    };
+
     public:
       expression_colorizer(const char* const expr_str, const detail::bool_expression& expr)
-        : _lhs(expr_str)
-        , _end(expr_str + std::strlen(expr_str))
-        , _op(_end)
-        , _rhs(_end)
+      : _tokens{
+          {msg::expression, expr_str, std::strlen(expr_str)},
+        }
       {
-        using namespace std;
-
         for (const auto& token : expr)
         {
           const auto* const op = dynamic_cast<const detail::string_maker_op*>(&token);
           if (!op)
             continue;
 
-          // Multiple operators found in the expression: don't even try to separate them
-          if (_op != _end)
-          {
-            _rhs = _op = _end;
-            return;
-          }
-
+          // Find the operator in the last trailing part of the expression string
+          const char* const start = _tokens.back().str;
           const char* const op_str = op->str();
-          _op = strstr(_lhs, op_str);
-          if (!_op)
-          {
-            _op = _end;
+          const auto op_pos = [=] {
+            const auto str = strstr(start, op_str);
+            return static_cast<std::size_t>(str ? str - start : 0);
+          }();
+          if (!op_pos)
             continue;
-          }
 
-          _rhs = _op + std::strlen(op_str);
+          const auto orig_size = std::exchange(_tokens.back().len, op_pos);
+
+          const auto op_len = strlen(op_str);
+          _tokens.push_back({msg::operator_, start + op_pos, op_len});
+          _tokens.push_back({msg::expression, start + op_pos + op_len, orig_size - op_pos - op_len});
         }
       }
 
       friend std::ostream& operator<<(std::ostream& os, const expression_colorizer& expr)
       {
-        os << msg::expression;
-        if (os.good())
-          os.write(expr._lhs, expr._op  - expr._lhs);
+        for (const auto& token : expr._tokens)
+        {
+          if (!os.good()) return os;
+          os << token.msg_type;
+          if (!os.good()) return os;
+          os.write(token.str, static_cast<std::ptrdiff_t>(token.len));
+        }
 
-        os << msg::operator_;
-        if (os.good())
-          os.write(expr._op , expr._rhs - expr._op );
-
-        os << msg::expression;
-        if (os.good())
-          os.write(expr._rhs, expr._end - expr._rhs);
+        if (!os.good()) return os;
         return os << msg::plain_text;
       }
 
     private:
-      const char* _lhs;
-      const char* _end;
-      const char* _op;
-      const char* _rhs;
+      std::vector<token_t> _tokens;
     };
   }
 
