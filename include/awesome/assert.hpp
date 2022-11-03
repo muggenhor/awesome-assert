@@ -336,22 +336,24 @@ namespace AwesomeAssert
     public:
 
       // forbidding expressions with lower precedence than comparison operators above: we only wish to deal with binary comparisons
-      template <typename R> int operator&  (const R&) { static_assert(TFalse<R>::val, "Expression too complex: rewrite as binary comparison"); return int(); }
-      template <typename R> int operator^  (const R&) { static_assert(TFalse<R>::val, "Expression too complex: rewrite as binary comparison"); return int(); }
-      template <typename R> int operator|  (const R&) { static_assert(TFalse<R>::val, "Expression too complex: rewrite as binary comparison"); return int(); }
+      template <typename R> int operator&  (const R&) { static_assert(TFalse<R>::val, "Use braces around bitwise operators"); return int(); }
+      template <typename R> int operator^  (const R&) { static_assert(TFalse<R>::val, "Use braces around bitwise operators"); return int(); }
+      template <typename R> int operator|  (const R&) { static_assert(TFalse<R>::val, "Use braces around bitwise operators"); return int(); }
+
+      template <typename R> int operator=  (const R&) { static_assert(TFalse<R>::val, "Don't use assignment operators in assertions!"); return int(); }
+      template <typename R> int operator+= (const R&) { static_assert(TFalse<R>::val, "Don't use assignment operators in assertions!"); return int(); }
+      template <typename R> int operator-= (const R&) { static_assert(TFalse<R>::val, "Don't use assignment operators in assertions!"); return int(); }
+      template <typename R> int operator*= (const R&) { static_assert(TFalse<R>::val, "Don't use assignment operators in assertions!"); return int(); }
+      template <typename R> int operator/= (const R&) { static_assert(TFalse<R>::val, "Don't use assignment operators in assertions!"); return int(); }
+      template <typename R> int operator%= (const R&) { static_assert(TFalse<R>::val, "Don't use assignment operators in assertions!"); return int(); }
+      template <typename R> int operator<<=(const R&) { static_assert(TFalse<R>::val, "Don't use assignment operators in assertions!"); return int(); }
+      template <typename R> int operator>>=(const R&) { static_assert(TFalse<R>::val, "Don't use assignment operators in assertions!"); return int(); }
+      template <typename R> int operator&= (const R&) { static_assert(TFalse<R>::val, "Don't use assignment operators in assertions!"); return int(); }
+      template <typename R> int operator^= (const R&) { static_assert(TFalse<R>::val, "Don't use assignment operators in assertions!"); return int(); }
+      template <typename R> int operator|= (const R&) { static_assert(TFalse<R>::val, "Don't use assignment operators in assertions!"); return int(); }
+
       template <typename R> int operator&& (const R&) { static_assert(TFalse<R>::val, "Expression too complex: rewrite as binary comparison"); return int(); }
       template <typename R> int operator|| (const R&) { static_assert(TFalse<R>::val, "Expression too complex: rewrite as binary comparison"); return int(); }
-      template <typename R> int operator=  (const R&) { static_assert(TFalse<R>::val, "Expression too complex: rewrite as binary comparison"); return int(); }
-      template <typename R> int operator+= (const R&) { static_assert(TFalse<R>::val, "Expression too complex: rewrite as binary comparison"); return int(); }
-      template <typename R> int operator-= (const R&) { static_assert(TFalse<R>::val, "Expression too complex: rewrite as binary comparison"); return int(); }
-      template <typename R> int operator*= (const R&) { static_assert(TFalse<R>::val, "Expression too complex: rewrite as binary comparison"); return int(); }
-      template <typename R> int operator/= (const R&) { static_assert(TFalse<R>::val, "Expression too complex: rewrite as binary comparison"); return int(); }
-      template <typename R> int operator%= (const R&) { static_assert(TFalse<R>::val, "Expression too complex: rewrite as binary comparison"); return int(); }
-      template <typename R> int operator<<=(const R&) { static_assert(TFalse<R>::val, "Expression too complex: rewrite as binary comparison"); return int(); }
-      template <typename R> int operator>>=(const R&) { static_assert(TFalse<R>::val, "Expression too complex: rewrite as binary comparison"); return int(); }
-      template <typename R> int operator&= (const R&) { static_assert(TFalse<R>::val, "Expression too complex: rewrite as binary comparison"); return int(); }
-      template <typename R> int operator^= (const R&) { static_assert(TFalse<R>::val, "Expression too complex: rewrite as binary comparison"); return int(); }
-      template <typename R> int operator|= (const R&) { static_assert(TFalse<R>::val, "Expression too complex: rewrite as binary comparison"); return int(); }
 
       // Special case for ASSERT(... && "string-constant failure message")
       template <std::size_t N>
