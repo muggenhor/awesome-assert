@@ -81,6 +81,11 @@ int main(int argc, char**)
 
   AWESOME_ASSERT(move_only(1) << move_only(3) == move_only(8));
 
+  auto val = 6;
+  AWESOME_EXPECTS((1 <= val) && (val <= 10));
+  val = 42;
+  AWESOME_EXPECTS((1 > val) || (val > 10));
+
   AWESOME_EXPECTS(
       argc >= 10 - argc
    && "not enough command line arguments given"

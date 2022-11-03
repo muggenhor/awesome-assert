@@ -201,6 +201,7 @@ namespace AwesomeAssert
   template <> struct AWESOME_EXPORT string_maker<::std::greater      <>> : detail::string_maker_op { const char* str() const noexcept override; };
   template <> struct AWESOME_EXPORT string_maker<::std::greater_equal<>> : detail::string_maker_op { const char* str() const noexcept override; };
   template <> struct AWESOME_EXPORT string_maker<::std::logical_and  <>> : detail::string_maker_op { const char* str() const noexcept override; };
+  template <> struct AWESOME_EXPORT string_maker<::std::logical_or   <>> : detail::string_maker_op { const char* str() const noexcept override; };
 
   namespace detail
   {
@@ -397,14 +398,8 @@ namespace AwesomeAssert
       template <class R> friend bool_expression operator<=(expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), ::std::   less_equal<>(), std::forward<R>(rhs)); }
       template <class R> friend bool_expression operator> (expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), ::std::greater      <>(), std::forward<R>(rhs)); }
       template <class R> friend bool_expression operator>=(expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), ::std::greater_equal<>(), std::forward<R>(rhs)); }
-
-      // Special case for ASSERT(... && "string-constant failure message")
-      template <std::size_t N>
-      friend constexpr bool_expression operator&&(expression_lhs<T> lhs, const char (&message)[N])
-      {
-        return bool_expression{
-            std::move(lhs.val), ::std::logical_and<>(), static_cast<const char*>(message)};
-      }
+      template <class R> friend bool_expression operator&&(expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), ::std::logical_and  <>(), std::forward<R>(rhs)); }
+      template <class R> friend bool_expression operator||(expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), ::std::logical_or   <>(), std::forward<R>(rhs)); }
 
       // Necessary to permit usage of these in expressions. They should be allowed because they
       // have higher precedence than comparison operators, but they're not without this because we
