@@ -365,8 +365,8 @@ namespace AwesomeAssert
     struct expression_lhs
     {
       constexpr expression_lhs(T lhs_)
-        noexcept(noexcept(T{std::move(lhs_)}))
-        : val(std::move(lhs_))
+        noexcept(std::is_nothrow_move_constructible<T>::value)
+        : val(std::forward<T>(lhs_))
       {}
 
       template <class R> friend bool_expression operator==(expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), ::std::    equal_to <>(), std::forward<R>(rhs)); }
