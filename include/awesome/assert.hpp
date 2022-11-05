@@ -298,7 +298,10 @@ namespace AwesomeAssert
 
       template <typename TL, typename TO, typename TR>
       bool_expression(TL&& lhs, TO&& op, TR&& rhs)
-        : fail_expression(op(lhs, rhs) ? nullptr : create_expression_list(std::forward<TL>(lhs), std::forward<TO>(op), std::forward<TR>(rhs)))
+        : fail_expression(
+            static_cast<const TO&>(op)(static_cast<const TL&>(lhs), static_cast<const TR&>(rhs))
+                ? nullptr
+                : create_expression_list(std::forward<TL>(lhs), std::forward<TO>(op), std::forward<TR>(rhs)))
       {
       }
 
@@ -379,14 +382,14 @@ namespace AwesomeAssert
       template <typename R>
       friend constexpr auto operator<<(expression_lhs<T> lhs, R&& rhs)
         noexcept(noexcept(std::move(lhs.val) << std::forward<R>(rhs)))
-        -> expression_lhs<decltype(T() << std::forward<R>(rhs))>
+        -> expression_lhs<decltype(std::declval<T>() << std::forward<R>(rhs))>
       {
         return std::move(lhs.val) << std::forward<R>(rhs);
       }
       template <typename R>
       friend constexpr auto operator>>(expression_lhs<T> lhs, R&& rhs)
         noexcept(noexcept(std::move(lhs.val) >> std::forward<R>(rhs)))
-        -> expression_lhs<decltype(T() >> std::forward<R>(rhs))>
+        -> expression_lhs<decltype(std::declval<T>() >> std::forward<R>(rhs))>
       {
         return std::move(lhs.val) >> std::forward<R>(rhs);
       }
