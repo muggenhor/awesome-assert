@@ -295,13 +295,7 @@ namespace AwesomeAssert
       // For unary expressions
       template <typename T>
       explicit bool_expression(expression_lhs<T> unaryExpr)
-        : bool_expression(std::move(unaryExpr.val))
-      {
-      }
-
-      template <typename T>
-      explicit bool_expression(T&& val)
-        : fail_expression(val ? nullptr : create_expression_list(std::forward<T>(val)))
+        : fail_expression(unaryExpr ? nullptr : create_expression_list(std::move(unaryExpr)))
       {
       }
 
@@ -401,8 +395,29 @@ namespace AwesomeAssert
       return expr;
     }
 
+    struct empty {};
+
+    template <typename D>
+    struct contextually_convertible_bool
+    {
+      explicit constexpr operator bool() const
+          noexcept(std::is_nothrow_constructible<bool, const decltype(D::val)&>::value)
+      {
+        return static_cast<bool>(static_cast<const D&>(*this).val);
+      }
+    };
+
+    // CRTP helper to make the deriving class D be contextually convertible to bool if it's member T
+    // D::*val is convertible to bool.
+    template <typename T, typename D>
+    using optional_bool_convert_t = typename std::conditional<
+        std::is_constructible<bool, const T&>::value
+      , contextually_convertible_bool<D>
+      , empty
+      >::type;
+
     template <typename T>
-    struct expression_lhs
+    struct expression_lhs : optional_bool_convert_t<T, expression_lhs<T>>
     {
       constexpr expression_lhs(T lhs_)
         noexcept(std::is_nothrow_move_constructible<T>::value)
@@ -442,7 +457,7 @@ namespace AwesomeAssert
       }
 
     private:
-      friend bool_expression;
+      friend contextually_convertible_bool<expression_lhs<T>>;
       T val;
     };
 
