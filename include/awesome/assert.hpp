@@ -115,8 +115,8 @@ namespace AwesomeAssert
       stringifier* ptr = nullptr;
     };
 
-    template <typename T, typename... Args, typename std::enable_if<std::is_base_of<stringifier, T>::value>::type* = nullptr>
-    auto prepend(detail::stringifier_ptr tail, Args&&... args);
+    template <typename T>
+    auto prepend(detail::stringifier_ptr tail, T&& obj);
 
     struct bool_expression;
   }
@@ -133,8 +133,8 @@ namespace AwesomeAssert
   private:
     friend struct detail::bool_expression;
     // Must be inline to ensure the compiler has the full body available for constant propagation
-    template <typename T, typename... Args, typename std::enable_if<std::is_base_of<stringifier, T>::value>::type*>
-    friend auto detail::prepend(detail::stringifier_ptr tail, Args&&... args);
+    template <typename T>
+    friend auto detail::prepend(detail::stringifier_ptr tail, T&& obj);
 
     detail::stringifier_ptr next;
   };
@@ -211,36 +211,43 @@ namespace AwesomeAssert
       delete ptr;
     }
 
-    template <typename T, typename... Args, typename std::enable_if<std::is_base_of<stringifier, T>::value>::type*>
-    auto prepend(detail::stringifier_ptr tail, Args&&... args)
+    template <typename T>
+    auto create_expression_list(T&& val)
     {
-      detail::stringifier_ptr head(new T(std::forward<Args>(args)...));
-      head->next = std::move(tail);
+      return stringifier_ptr(new string_maker<T>(std::forward<T>(val)));
+    }
+
+    // Overloads that *don't* forward their parameter to the string_maker constructor.
+    inline auto create_expression_list(::std::    equal_to <> val) { return stringifier_ptr(new string_maker<decltype(val)>()); }
+    inline auto create_expression_list(::std::not_equal_to <> val) { return stringifier_ptr(new string_maker<decltype(val)>()); }
+    inline auto create_expression_list(::std::   less      <> val) { return stringifier_ptr(new string_maker<decltype(val)>()); }
+    inline auto create_expression_list(::std::   less_equal<> val) { return stringifier_ptr(new string_maker<decltype(val)>()); }
+    inline auto create_expression_list(::std::greater      <> val) { return stringifier_ptr(new string_maker<decltype(val)>()); }
+    inline auto create_expression_list(::std::greater_equal<> val) { return stringifier_ptr(new string_maker<decltype(val)>()); }
+    inline auto create_expression_list(::std::logical_and  <> val) { return stringifier_ptr(new string_maker<decltype(val)>()); }
+    inline auto create_expression_list(::std::logical_or   <> val) { return stringifier_ptr(new string_maker<decltype(val)>()); }
+
+    template <typename T>
+    auto prepend(detail::stringifier_ptr tail, T&& obj)
+    {
+      detail::stringifier_ptr head(create_expression_list(std::forward<T>(obj)));
+
+      // Find the end of the prepended expression
+      auto cur = head.get();
+      while (cur->next) cur = cur->next.get();
+
+      cur->next = std::move(tail);
       return head;
     }
+
+    template <typename TL, typename TO, typename TR>
+    auto create_expression_list(TL&& lhs, TO&& op, TR&& rhs);
 
     template <typename T>
     struct expression_lhs;
 
     struct AWESOME_EXPORT bool_expression
     {
-    private:
-      template <typename T>
-      static auto create_expression_list(T&& val)
-      {
-        return stringifier_ptr(new string_maker<T>(std::forward<T>(val)));
-      }
-
-      template <typename TL, typename TO, typename TR>
-      static auto create_expression_list(TL&& lhs, TO&&, TR&& rhs)
-      {
-        // Constructing in reverse order because of the linked-list structure
-        stringifier_ptr expr(new string_maker<TR>(std::forward<TR>(rhs)));
-        expr = prepend<string_maker<TO>>(std::move(expr));
-        expr = prepend<string_maker<TL>>(std::move(expr), std::forward<TL>(lhs));
-        return expr;
-      }
-
     public:
       struct AWESOME_EXPORT const_iterator : std::iterator<std::forward_iterator_tag, const stringifier>
       {
@@ -367,7 +374,7 @@ namespace AwesomeAssert
           while (cur->next) cur = cur->next.get();
 
           stringifier_ptr expr(new string_maker<const char*>{message});
-          expr = prepend<string_maker<::std::logical_and<>>>(std::move(expr));
+          expr = prepend(std::move(expr), ::std::logical_and<>{});
 
           cur->next = std::move(expr);
         }
@@ -384,6 +391,16 @@ namespace AwesomeAssert
 
     AWESOME_EXPORT std::ostream& operator<<(std::ostream& os, const bool_expression& expr);
 
+    template <typename TL, typename TO, typename TR>
+    auto create_expression_list(TL&& lhs, TO&& op, TR&& rhs)
+    {
+      // Constructing in reverse order because of the linked-list structure
+      stringifier_ptr expr(create_expression_list(std::forward<TR>(rhs)));
+      expr = prepend(std::move(expr), std::forward<TO>(op));
+      expr = prepend(std::move(expr), std::forward<TL>(lhs));
+      return expr;
+    }
+
     template <typename T>
     struct expression_lhs
     {
@@ -391,6 +408,11 @@ namespace AwesomeAssert
         noexcept(std::is_nothrow_move_constructible<T>::value)
         : val(std::forward<T>(lhs_))
       {}
+
+      friend auto create_expression_list(expression_lhs lhs)
+      {
+        return create_expression_list(std::forward<T>(lhs.val));
+      }
 
       template <class R> friend bool_expression operator==(expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), ::std::    equal_to <>(), std::forward<R>(rhs)); }
       template <class R> friend bool_expression operator!=(expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), ::std::not_equal_to <>(), std::forward<R>(rhs)); }
