@@ -240,11 +240,11 @@ namespace AwesomeAssert
       return head;
     }
 
-    template <typename TL, typename TO, typename TR>
-    auto create_expression_list(TL&& lhs, TO&& op, TR&& rhs);
-
     template <typename T>
     struct expression_lhs;
+
+    template <typename TL, typename TO, typename TR>
+    struct expression_binary;
 
     struct AWESOME_EXPORT bool_expression
     {
@@ -292,19 +292,15 @@ namespace AwesomeAssert
 
       constexpr explicit bool_expression() = default;
 
-      // For unary expressions
       template <typename T>
       explicit bool_expression(expression_lhs<T> unaryExpr)
         : fail_expression(unaryExpr ? nullptr : create_expression_list(std::move(unaryExpr)))
       {
       }
 
-      template <typename TL, typename TO, typename TR>
-      constexpr bool_expression(TL&& lhs, TO&& op, TR&& rhs)
-        : fail_expression(
-            static_cast<const TO&>(op)(static_cast<const TL&>(lhs), static_cast<const TR&>(rhs))
-                ? nullptr
-                : create_expression_list(std::forward<TL>(lhs), std::forward<TO>(op), std::forward<TR>(rhs)))
+      template <typename... Ts>
+      explicit constexpr bool_expression(expression_binary<Ts...> expr)
+        : fail_expression(expr ? nullptr : create_expression_list(std::move(expr)))
       {
       }
 
@@ -330,53 +326,6 @@ namespace AwesomeAssert
       }
 
     private:
-      template <typename>
-      struct TFalse
-      {
-        static constexpr bool val = false;
-      };
-    public:
-
-      // forbidding expressions with lower precedence than comparison operators above: we only wish to deal with binary comparisons
-      template <typename R> int operator&  (const R&) { static_assert(TFalse<R>::val, "Use braces around bitwise operators"); return int(); }
-      template <typename R> int operator^  (const R&) { static_assert(TFalse<R>::val, "Use braces around bitwise operators"); return int(); }
-      template <typename R> int operator|  (const R&) { static_assert(TFalse<R>::val, "Use braces around bitwise operators"); return int(); }
-
-      template <typename R> int operator=  (const R&) { static_assert(TFalse<R>::val, "Don't use assignment operators in assertions!"); return int(); }
-      template <typename R> int operator+= (const R&) { static_assert(TFalse<R>::val, "Don't use assignment operators in assertions!"); return int(); }
-      template <typename R> int operator-= (const R&) { static_assert(TFalse<R>::val, "Don't use assignment operators in assertions!"); return int(); }
-      template <typename R> int operator*= (const R&) { static_assert(TFalse<R>::val, "Don't use assignment operators in assertions!"); return int(); }
-      template <typename R> int operator/= (const R&) { static_assert(TFalse<R>::val, "Don't use assignment operators in assertions!"); return int(); }
-      template <typename R> int operator%= (const R&) { static_assert(TFalse<R>::val, "Don't use assignment operators in assertions!"); return int(); }
-      template <typename R> int operator<<=(const R&) { static_assert(TFalse<R>::val, "Don't use assignment operators in assertions!"); return int(); }
-      template <typename R> int operator>>=(const R&) { static_assert(TFalse<R>::val, "Don't use assignment operators in assertions!"); return int(); }
-      template <typename R> int operator&= (const R&) { static_assert(TFalse<R>::val, "Don't use assignment operators in assertions!"); return int(); }
-      template <typename R> int operator^= (const R&) { static_assert(TFalse<R>::val, "Don't use assignment operators in assertions!"); return int(); }
-      template <typename R> int operator|= (const R&) { static_assert(TFalse<R>::val, "Don't use assignment operators in assertions!"); return int(); }
-
-      template <typename R> int operator&& (const R&) { static_assert(TFalse<R>::val, "Expression too complex: rewrite as binary comparison"); return int(); }
-      template <typename R> int operator|| (const R&) { static_assert(TFalse<R>::val, "Expression too complex: rewrite as binary comparison"); return int(); }
-
-      // Special case for ASSERT(... && "string-constant failure message")
-      template <std::size_t N>
-      constexpr bool_expression&& operator&&(const char (&message)[N]) &&
-      {
-        if (fail_expression)
-        {
-          // Find the end of the current expression
-          auto cur = fail_expression.get();
-          while (cur->next) cur = cur->next.get();
-
-          stringifier_ptr expr(new string_maker<const char*>{message});
-          expr = prepend(std::move(expr), ::std::logical_and<>{});
-
-          cur->next = std::move(expr);
-        }
-
-        return std::move(*this);
-      }
-
-    private:
       //! Storing string converters instead of strings to prevent inlining of conversion code.
       //! Either \c NULL or terminated with a \c NULL sentinel. This removes the need for a separate
       //! size field, which would increase code size for setting up and copying that field.
@@ -386,14 +335,45 @@ namespace AwesomeAssert
     AWESOME_EXPORT std::ostream& operator<<(std::ostream& os, const bool_expression& expr);
 
     template <typename TL, typename TO, typename TR>
-    auto create_expression_list(TL&& lhs, TO&& op, TR&& rhs)
+    struct expression_binary
     {
-      // Constructing in reverse order because of the linked-list structure
-      stringifier_ptr expr(create_expression_list(std::forward<TR>(rhs)));
-      expr = prepend(std::move(expr), std::forward<TO>(op));
-      expr = prepend(std::move(expr), std::forward<TL>(lhs));
-      return expr;
-    }
+      explicit constexpr operator bool() const
+        noexcept(noexcept(std::declval<TO>()(std::declval<TL>(), std::declval<TR>())))
+      {
+        return op(lhs, rhs);
+      }
+
+      friend auto create_expression_list(expression_binary&& expr)
+      {
+        // Constructing in reverse order because of the linked-list structure
+        stringifier_ptr str_expr(create_expression_list(std::forward<TR>(expr.rhs)));
+        str_expr = prepend(std::move(str_expr), std::forward<TO>(expr.op));
+        str_expr = prepend(std::move(str_expr), std::forward<TL>(expr.lhs));
+        return str_expr;
+      }
+
+      //! Don't use assignment operators in assertions!
+      template <typename R>
+      void operator=(R&&) = delete;
+
+      // Special case for ASSERT(... && "string-constant failure message")
+      template <std::size_t N>
+      constexpr auto operator&&(const char (&message)[N]) &&
+        noexcept(std::is_nothrow_move_constructible<expression_binary<TL, TO, TR>>::value)
+      {
+        return expression_binary<
+            expression_binary<TL, TO, TR>
+          , std::logical_and<>
+          , const char*>{
+            std::move(*this),
+            message,
+        };
+      }
+
+      TL lhs;
+      TR rhs;
+      TO op = {};
+    };
 
     struct empty {};
 
@@ -429,14 +409,40 @@ namespace AwesomeAssert
         return create_expression_list(std::forward<T>(lhs.val));
       }
 
-      template <class R> friend bool_expression operator==(expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), ::std::    equal_to <>(), std::forward<R>(rhs)); }
-      template <class R> friend bool_expression operator!=(expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), ::std::not_equal_to <>(), std::forward<R>(rhs)); }
-      template <class R> friend bool_expression operator< (expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), ::std::   less      <>(), std::forward<R>(rhs)); }
-      template <class R> friend bool_expression operator<=(expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), ::std::   less_equal<>(), std::forward<R>(rhs)); }
-      template <class R> friend bool_expression operator> (expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), ::std::greater      <>(), std::forward<R>(rhs)); }
-      template <class R> friend bool_expression operator>=(expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), ::std::greater_equal<>(), std::forward<R>(rhs)); }
-      template <class R> friend bool_expression operator&&(expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), ::std::logical_and  <>(), std::forward<R>(rhs)); }
-      template <class R> friend bool_expression operator||(expression_lhs<T> lhs, R&& rhs) { return bool_expression(std::move(lhs.val), ::std::logical_or   <>(), std::forward<R>(rhs)); }
+      //! Don't use assignment operators in assertions!
+      template <typename R>
+      void operator=(R&&) = delete;
+
+      template <class R> friend auto operator==(expression_lhs<T> lhs, R&& rhs) { return expression_binary<T, ::std::    equal_to <>, R>{std::forward<T>(lhs.val), std::forward<R>(rhs)}; }
+      template <class R> friend auto operator!=(expression_lhs<T> lhs, R&& rhs) { return expression_binary<T, ::std::not_equal_to <>, R>{std::forward<T>(lhs.val), std::forward<R>(rhs)}; }
+      template <class R> friend auto operator< (expression_lhs<T> lhs, R&& rhs) { return expression_binary<T, ::std::   less      <>, R>{std::forward<T>(lhs.val), std::forward<R>(rhs)}; }
+      template <class R> friend auto operator<=(expression_lhs<T> lhs, R&& rhs) { return expression_binary<T, ::std::   less_equal<>, R>{std::forward<T>(lhs.val), std::forward<R>(rhs)}; }
+      template <class R> friend auto operator> (expression_lhs<T> lhs, R&& rhs) { return expression_binary<T, ::std::greater      <>, R>{std::forward<T>(lhs.val), std::forward<R>(rhs)}; }
+      template <class R> friend auto operator>=(expression_lhs<T> lhs, R&& rhs) { return expression_binary<T, ::std::greater_equal<>, R>{std::forward<T>(lhs.val), std::forward<R>(rhs)}; }
+
+      template <typename R>
+      friend constexpr auto operator&&(expression_lhs<T> lhs, R&& rhs)
+      {
+        static_assert(
+            std::is_same<R, bool>::value || std::is_convertible<R&&, const char*>::value, "Expression too complex: rewrite as binary comparison"
+        );
+        return expression_binary<T, ::std::logical_and<>, R>{
+          std::forward<T>(lhs.val),
+          std::forward<R>(rhs),
+        };
+      }
+
+      template <typename R>
+      friend constexpr auto operator||(expression_lhs<T> lhs, R&& rhs)
+      {
+        static_assert(
+            std::is_same<R, bool>::value, "Expression too complex: rewrite as binary comparison"
+        );
+        return expression_binary<T, ::std::logical_or<>, R>{
+          std::forward<T>(lhs.val),
+          std::forward<R>(rhs),
+        };
+      }
 
       // Necessary to permit usage of these in expressions. They should be allowed because they
       // have higher precedence than comparison operators, but they're not without this because we
