@@ -5,6 +5,42 @@
 
 An assert implementation that aims to provide usable information while maintaining as small a performance footprint as possible when _not_ failing.
 
+## Usage
+
+This library is intended to be used by `#include <awesome/assert.hpp>` and use of one of these three assert macros:
+
+```cppp
+#define AWESOME_EXPECTS(<boolean-expr>)  // precondition
+#define AWESOME_ASSERT(<boolean-expr>)   // invariant
+#define AWESOME_ENSURES(<boolean-expr>)  // postcondition
+```
+
+* `AWESOME_ASSERT` is for conditions that the containing component is responsible for meeting.
+* `AWESOME_EXPECTS` is for checking of *documented* pre-conditions of the public API of your component.
+* `AWESOME_ENSURES` is for checking whether results and state adhere to *documented* post-conditions.
+
+Generally you'll want to use `AWESOME_EXPECTS` and `AWESOME_ENSURES` at the boundary of your component's public interface.
+While sticking to `AWESOME_ASSERT` for internals.
+
+There are some limitations to the complexity of expressions you can pass to these assert macros.
+These limitations stem from relying on expression decomposition to be able to produce error messages that include the values of the operands.
+But we're documenting them here to prevent confusion.
+
+```cpp
+AWESOME_ASSERT(x COMP y);
+AWESOME_ASSERT(x COMP y && y COMP z);
+AWESOME_ASSERT(x COMP y || y COMP z);
+```
+
+Where `COMP` is one of these binary comparison operators: `==`, `!=`, `<`, `<=`, `>`, `>=` and `&` (bitwise and, for use as bitmask test operator).
+
+Note that only a *single* instance of a logical operator (`&&` or `||`) is allowed because introspection fails beyond that.
+Additionally `x`, `y` and `z` represent actual values here (or function calls that produce them), not boolean expressions.
+
+In most cases you shouldn't experience any problems resulting from these limitations.
+The most common problem is having more than two boolean expressions combined with `&&`.
+In almost all cases the solution for that is to have a separate assert statement per such boolean expression.
+
 ## Requirements
 
 ### Capture and Log Context When Failing
