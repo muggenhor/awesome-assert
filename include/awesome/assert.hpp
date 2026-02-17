@@ -790,6 +790,14 @@ namespace AwesomeAssert
       AWESOME_ASSERT_IMPL(fail_func, expr); \
       _Pragma("clang diagnostic pop") \
     } while (0)
+#elif defined(__GNUC__)
+  #define AWESOME_ASSERT_PROXY(fail_func, expr) \
+    do { \
+      _Pragma("GCC diagnostic push") \
+      _Pragma("GCC diagnostic ignored \"-Wparentheses\"") \
+      AWESOME_ASSERT_IMPL(fail_func, expr); \
+      _Pragma("GCC diagnostic pop") \
+    } while (0)
 #else
   #define AWESOME_ASSERT_PROXY(fail_func, expr) AWESOME_ASSERT_IMPL(fail_func, expr)
 #endif
