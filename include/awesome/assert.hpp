@@ -272,8 +272,15 @@ namespace AwesomeAssert
     struct AWESOME_EXPORT bool_expression
     {
     public:
-      struct AWESOME_EXPORT const_iterator : std::iterator<std::forward_iterator_tag, const stringifier>
+      struct AWESOME_EXPORT const_iterator
       {
+        // Type aliases required until C++20 for iterators
+        using iterator_category = std::forward_iterator_tag;
+        using value_type        = const stringifier;
+        using difference_type   = std::ptrdiff_t;
+        using pointer           = const stringifier*;
+        using reference         = const stringifier&;
+
         constexpr explicit const_iterator() noexcept = default;
         constexpr explicit const_iterator(const stringifier* cur_) noexcept
           : cur{cur_}
@@ -311,7 +318,7 @@ namespace AwesomeAssert
         const stringifier* cur = nullptr;
       };
 
-      typedef const_iterator iterator;
+      using iterator = const_iterator;
 
       constexpr explicit bool_expression() = default;
 
