@@ -127,6 +127,8 @@ install(FILES
 )
 install(EXPORT ${PROJECT_NAME}
   DESTINATION lib/cmake
+  NAMESPACE   Awesome::
+  FILE        ${PROJECT_NAME}Config.cmake
 )
 export(EXPORT ${PROJECT_NAME})
 
