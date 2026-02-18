@@ -40,9 +40,13 @@ if(UNIX AND (
   set(CMAKE_CXX_FLAGS "-fdiagnostics-color=always ${CMAKE_CXX_FLAGS}" CACHE STRING "" FORCE)
 endif()
 
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  # Ignore GCC-specific false positives about attributes
-  set(CMAKE_CXX_FLAGS "-Wno-attributes ${CMAKE_CXX_FLAGS}" CACHE STRING "" FORCE)
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  add_compile_options(
+    -Werror
+    -Wall
+    -Wextra
+    -Wconversion
+  )
 endif()
 
 set(PUBLIC_HEADER_TOP_DIR include/awesome)
