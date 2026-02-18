@@ -130,6 +130,8 @@ install(EXPORT ${PROJECT_NAME}
   NAMESPACE   Awesome::
   FILE        ${PROJECT_NAME}Config.cmake
 )
+set_target_properties(${PROJECT_NAME}        PROPERTIES EXPORT_NAME Assert)
+set_target_properties(${PROJECT_NAME}_static PROPERTIES EXPORT_NAME Assert_static)
 export(EXPORT ${PROJECT_NAME})
 
 enable_testing()
