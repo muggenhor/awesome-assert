@@ -65,7 +65,7 @@ namespace AwesomeAssert
     class AWESOME_EXPORT stringifier_ptr
     {
     public:
-      constexpr stringifier_ptr() noexcept = default;
+      stringifier_ptr() = default;
       constexpr explicit stringifier_ptr(stringifier* _p) noexcept
         : ptr(_p)
       {}
@@ -128,7 +128,7 @@ namespace AwesomeAssert
 
     // Necessary to prevent Visual Studio from defining the copy constructor and failing because stringifier_ptr isn't coypable
     stringifier(stringifier&&) = default;
-    constexpr stringifier() noexcept = default;
+    stringifier() = default;
 
   private:
     friend struct detail::bool_expression;
@@ -281,7 +281,7 @@ namespace AwesomeAssert
         using pointer           = const stringifier*;
         using reference         = const stringifier&;
 
-        constexpr explicit const_iterator() noexcept = default;
+        explicit const_iterator() = default;
         constexpr explicit const_iterator(const stringifier* cur_) noexcept
           : cur{cur_}
         {
@@ -320,7 +320,7 @@ namespace AwesomeAssert
 
       using iterator = const_iterator;
 
-      constexpr explicit bool_expression() = default;
+      explicit bool_expression() = default;
 
       template <typename T, typename std::enable_if<is_expression<typename std::remove_cv<typename std::remove_reference<T>::type>::type>::value>::type* = nullptr>
       explicit constexpr bool_expression(T expr)
@@ -328,8 +328,8 @@ namespace AwesomeAssert
       {
       }
 
-      constexpr bool_expression(bool_expression&& rhs) noexcept = default;
-      bool_expression& operator=(bool_expression&& rhs) noexcept = default;
+      bool_expression(bool_expression&& rhs) = default;
+      bool_expression& operator=(bool_expression&& rhs) = default;
 
       constexpr const_iterator begin() const noexcept
       {
@@ -665,8 +665,8 @@ namespace AwesomeAssert
 
   struct AWESOME_EXPORT violation_info
   {
-    constexpr violation_info() noexcept = default;
-    constexpr violation_info(violation_info&& rhs) noexcept = default;
+    violation_info() = default;
+    violation_info(violation_info&& rhs) = default;
 
     constexpr violation_info(
         const char*                     file
