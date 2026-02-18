@@ -49,26 +49,26 @@ std::ostream& operator<<(std::ostream& os, const stringifier& str)
   return str.convert(os);
 }
 
-template struct AWESOME_EXPORT string_maker<bool>;
-template struct AWESOME_EXPORT string_maker<short>;
-template struct AWESOME_EXPORT string_maker<unsigned short>;
-template struct AWESOME_EXPORT string_maker<int>;
-template struct AWESOME_EXPORT string_maker<unsigned int>;
-template struct AWESOME_EXPORT string_maker<long>;
-template struct AWESOME_EXPORT string_maker<unsigned long>;
-template struct AWESOME_EXPORT string_maker<long long>;
-template struct AWESOME_EXPORT string_maker<unsigned long long>;
-template struct AWESOME_EXPORT string_maker<float>;
-template struct AWESOME_EXPORT string_maker<double>;
-template struct AWESOME_EXPORT string_maker<long double>;
-template struct AWESOME_EXPORT string_maker<void*>;
-template struct AWESOME_EXPORT string_maker<const void*>;
-template struct AWESOME_EXPORT string_maker<char>;
-template struct AWESOME_EXPORT string_maker<signed char>;
-template struct AWESOME_EXPORT string_maker<unsigned char>;
-template struct AWESOME_EXPORT string_maker<const char*>;
-template struct AWESOME_EXPORT string_maker<const signed char*>;
-template struct AWESOME_EXPORT string_maker<const unsigned char*>;
+template struct string_maker<bool>;
+template struct string_maker<short>;
+template struct string_maker<unsigned short>;
+template struct string_maker<int>;
+template struct string_maker<unsigned int>;
+template struct string_maker<long>;
+template struct string_maker<unsigned long>;
+template struct string_maker<long long>;
+template struct string_maker<unsigned long long>;
+template struct string_maker<float>;
+template struct string_maker<double>;
+template struct string_maker<long double>;
+template struct string_maker<void*>;
+template struct string_maker<const void*>;
+template struct string_maker<char>;
+template struct string_maker<signed char>;
+template struct string_maker<unsigned char>;
+template struct string_maker<const char*>;
+template struct string_maker<const signed char*>;
+template struct string_maker<const unsigned char*>;
 
 const char* string_maker<::std::    equal_to <>>::str() const noexcept { return "=="; }
 const char* string_maker<::std::not_equal_to <>>::str() const noexcept { return "!="; }

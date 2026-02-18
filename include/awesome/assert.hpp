@@ -25,7 +25,14 @@
 #include <functional>
 #include <iosfwd>
 #include <iterator>
+#include <memory>
 #include <stdexcept>
+
+#if __cplusplus >= 202302L
+  #define AWESOME_CXX23_CONSTEXPR constexpr
+#else
+  #define AWESOME_CXX23_CONSTEXPR
+#endif
 
 #ifndef AWESOME_PRECONDITION_NO_NOEXCEPT
   #define AWESOME_PRECONDITION_NOEXCEPT noexcept
@@ -45,13 +52,6 @@
   #define AWESOME_POSTCONDITION_NOEXCEPT
 #endif
 
-// Helps preventing C4910 on MSVC: '__declspec(dllexport)' and 'extern' are incompatible on an explicit instantiation
-#if defined(AwesomeAssert_EXPORTS) && defined(_MSC_VER)
-  #define AWESOME_IMPORT
-#else
-  #define AWESOME_IMPORT AWESOME_EXPORT
-#endif
-
 #include <type_traits>
 #include <utility>
 
@@ -61,62 +61,8 @@ namespace AwesomeAssert
 
   namespace detail
   {
-    // std::unique_ptr<stringifier> variant that's marked for DLL export
-    class AWESOME_EXPORT stringifier_ptr
-    {
-    public:
-      stringifier_ptr() = default;
-      constexpr explicit stringifier_ptr(stringifier* _p) noexcept
-        : ptr(_p)
-      {}
-      constexpr stringifier_ptr(std::nullptr_t) noexcept
-        : ptr(nullptr)
-      {}
-
-      constexpr stringifier_ptr(stringifier_ptr&& rhs) noexcept
-        : ptr(rhs.ptr)
-      {
-        rhs.ptr = nullptr;
-      }
-
-      ~stringifier_ptr() noexcept;
-
-      friend void swap(stringifier_ptr& lhs, stringifier_ptr& rhs) noexcept
-      {
-        using std::swap;
-        swap(lhs.ptr, rhs.ptr);
-      }
-
-      stringifier_ptr& operator=(stringifier_ptr rhs) noexcept
-      {
-        // NOTE: this implementation _requires_ the argument to be by value instead of rvalue reference!
-        swap(*this, rhs);
-        return *this;
-      }
-
-      constexpr       stringifier& operator *()       noexcept { return *ptr; }
-      constexpr const stringifier& operator *() const noexcept { return *ptr; }
-      constexpr       stringifier* operator->()       noexcept { return  ptr; }
-      constexpr const stringifier* operator->() const noexcept { return  ptr; }
-      constexpr       stringifier*        get()       noexcept { return  ptr; }
-      constexpr const stringifier*        get() const noexcept { return  ptr; }
-
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable:4800)
-#endif
-      constexpr explicit operator bool() const noexcept { return static_cast<bool>(ptr); }
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-      constexpr bool     operator !   () const noexcept { return !ptr; }
-
-    private:
-      stringifier* ptr = nullptr;
-    };
-
     template <typename T>
-    auto prepend(detail::stringifier_ptr tail, T&& obj);
+    std::unique_ptr<stringifier> prepend(std::unique_ptr<stringifier> tail, T&& obj);
 
     struct bool_expression;
   }
@@ -126,17 +72,13 @@ namespace AwesomeAssert
     virtual ~stringifier() noexcept;
     virtual std::ostream& convert(std::ostream& os) const = 0;
 
-    // Necessary to prevent Visual Studio from defining the copy constructor and failing because stringifier_ptr isn't coypable
-    stringifier(stringifier&&) = default;
-    stringifier() = default;
-
   private:
     friend struct detail::bool_expression;
     // Must be inline to ensure the compiler has the full body available for constant propagation
     template <typename T>
-    friend auto detail::prepend(detail::stringifier_ptr tail, T&& obj);
+    friend std::unique_ptr<stringifier> detail::prepend(std::unique_ptr<stringifier> tail, T&& obj);
 
-    detail::stringifier_ptr next;
+    std::unique_ptr<stringifier> next;
   };
 
   AWESOME_EXPORT std::ostream& operator<<(std::ostream& os, const stringifier& str);
@@ -163,26 +105,26 @@ namespace AwesomeAssert
   };
 
   // Reduce amount of code needing to be duplicated across object files
-  extern template struct AWESOME_IMPORT string_maker<bool>;
-  extern template struct AWESOME_IMPORT string_maker<short>;
-  extern template struct AWESOME_IMPORT string_maker<unsigned short>;
-  extern template struct AWESOME_IMPORT string_maker<int>;
-  extern template struct AWESOME_IMPORT string_maker<unsigned int>;
-  extern template struct AWESOME_IMPORT string_maker<long>;
-  extern template struct AWESOME_IMPORT string_maker<unsigned long>;
-  extern template struct AWESOME_IMPORT string_maker<long long>;
-  extern template struct AWESOME_IMPORT string_maker<unsigned long long>;
-  extern template struct AWESOME_IMPORT string_maker<float>;
-  extern template struct AWESOME_IMPORT string_maker<double>;
-  extern template struct AWESOME_IMPORT string_maker<long double>;
-  extern template struct AWESOME_IMPORT string_maker<void*>;
-  extern template struct AWESOME_IMPORT string_maker<const void*>;
-  extern template struct AWESOME_IMPORT string_maker<char>;
-  extern template struct AWESOME_IMPORT string_maker<signed char>;
-  extern template struct AWESOME_IMPORT string_maker<unsigned char>;
-  extern template struct AWESOME_IMPORT string_maker<const char*>;
-  extern template struct AWESOME_IMPORT string_maker<const signed char*>;
-  extern template struct AWESOME_IMPORT string_maker<const unsigned char*>;
+  extern template struct AWESOME_EXPORT string_maker<bool>;
+  extern template struct AWESOME_EXPORT string_maker<short>;
+  extern template struct AWESOME_EXPORT string_maker<unsigned short>;
+  extern template struct AWESOME_EXPORT string_maker<int>;
+  extern template struct AWESOME_EXPORT string_maker<unsigned int>;
+  extern template struct AWESOME_EXPORT string_maker<long>;
+  extern template struct AWESOME_EXPORT string_maker<unsigned long>;
+  extern template struct AWESOME_EXPORT string_maker<long long>;
+  extern template struct AWESOME_EXPORT string_maker<unsigned long long>;
+  extern template struct AWESOME_EXPORT string_maker<float>;
+  extern template struct AWESOME_EXPORT string_maker<double>;
+  extern template struct AWESOME_EXPORT string_maker<long double>;
+  extern template struct AWESOME_EXPORT string_maker<void*>;
+  extern template struct AWESOME_EXPORT string_maker<const void*>;
+  extern template struct AWESOME_EXPORT string_maker<char>;
+  extern template struct AWESOME_EXPORT string_maker<signed char>;
+  extern template struct AWESOME_EXPORT string_maker<unsigned char>;
+  extern template struct AWESOME_EXPORT string_maker<const char*>;
+  extern template struct AWESOME_EXPORT string_maker<const signed char*>;
+  extern template struct AWESOME_EXPORT string_maker<const unsigned char*>;
 
   namespace detail
   {
@@ -206,33 +148,27 @@ namespace AwesomeAssert
 
   namespace detail
   {
-    // Must be inline to ensure the compiler has the full body available for constant propagation
-    inline stringifier_ptr::~stringifier_ptr() noexcept
-    {
-      delete ptr;
-    }
-
     template <typename T>
-    auto create_expression_list(T&& val)
+    std::unique_ptr<stringifier> create_expression_list(T&& val)
     {
-      return stringifier_ptr(new string_maker<T>(std::forward<T>(val)));
+      return std::make_unique<string_maker<T>>(std::forward<T>(val));
     }
 
     // Overloads that *don't* forward their parameter to the string_maker constructor.
-    inline auto create_expression_list(::std::    equal_to <> val) { return stringifier_ptr(new string_maker<decltype(val)>()); }
-    inline auto create_expression_list(::std::not_equal_to <> val) { return stringifier_ptr(new string_maker<decltype(val)>()); }
-    inline auto create_expression_list(::std::   less      <> val) { return stringifier_ptr(new string_maker<decltype(val)>()); }
-    inline auto create_expression_list(::std::   less_equal<> val) { return stringifier_ptr(new string_maker<decltype(val)>()); }
-    inline auto create_expression_list(::std::greater      <> val) { return stringifier_ptr(new string_maker<decltype(val)>()); }
-    inline auto create_expression_list(::std::greater_equal<> val) { return stringifier_ptr(new string_maker<decltype(val)>()); }
-    inline auto create_expression_list(::std::    bit_and  <> val) { return stringifier_ptr(new string_maker<decltype(val)>()); }
-    inline auto create_expression_list(::std::logical_and  <> val) { return stringifier_ptr(new string_maker<decltype(val)>()); }
-    inline auto create_expression_list(::std::logical_or   <> val) { return stringifier_ptr(new string_maker<decltype(val)>()); }
+    inline std::unique_ptr<stringifier> create_expression_list(::std::    equal_to <> val) { return std::make_unique<string_maker<decltype(val)>>(); }
+    inline std::unique_ptr<stringifier> create_expression_list(::std::not_equal_to <> val) { return std::make_unique<string_maker<decltype(val)>>(); }
+    inline std::unique_ptr<stringifier> create_expression_list(::std::   less      <> val) { return std::make_unique<string_maker<decltype(val)>>(); }
+    inline std::unique_ptr<stringifier> create_expression_list(::std::   less_equal<> val) { return std::make_unique<string_maker<decltype(val)>>(); }
+    inline std::unique_ptr<stringifier> create_expression_list(::std::greater      <> val) { return std::make_unique<string_maker<decltype(val)>>(); }
+    inline std::unique_ptr<stringifier> create_expression_list(::std::greater_equal<> val) { return std::make_unique<string_maker<decltype(val)>>(); }
+    inline std::unique_ptr<stringifier> create_expression_list(::std::    bit_and  <> val) { return std::make_unique<string_maker<decltype(val)>>(); }
+    inline std::unique_ptr<stringifier> create_expression_list(::std::logical_and  <> val) { return std::make_unique<string_maker<decltype(val)>>(); }
+    inline std::unique_ptr<stringifier> create_expression_list(::std::logical_or   <> val) { return std::make_unique<string_maker<decltype(val)>>(); }
 
     template <typename T>
-    auto prepend(detail::stringifier_ptr tail, T&& obj)
+    std::unique_ptr<stringifier> prepend(std::unique_ptr<stringifier> tail, T&& obj)
     {
-      detail::stringifier_ptr head(create_expression_list(std::forward<T>(obj)));
+      auto head = create_expression_list(std::forward<T>(obj));
 
       // Find the end of the prepended expression
       auto cur = head.get();
@@ -269,10 +205,10 @@ namespace AwesomeAssert
     template <typename T>
     struct is_expression : std::integral_constant<bool, is_unary_expression<T>::value || is_binary_expression<T>::value> {};
 
-    struct AWESOME_EXPORT bool_expression
+    struct bool_expression
     {
     public:
-      struct AWESOME_EXPORT const_iterator
+      struct const_iterator
       {
         // Type aliases required until C++20 for iterators
         using iterator_category = std::forward_iterator_tag;
@@ -287,13 +223,13 @@ namespace AwesomeAssert
         {
         }
 
-        constexpr const_iterator& operator++() noexcept
+        AWESOME_CXX23_CONSTEXPR const_iterator& operator++() noexcept
         {
           cur = cur->next.get();
           return *this;
         }
 
-        constexpr const_iterator operator++(int) noexcept
+        AWESOME_CXX23_CONSTEXPR const_iterator operator++(int) noexcept
         {
           auto prev = *this;
           ++*this;
@@ -331,7 +267,7 @@ namespace AwesomeAssert
       bool_expression(bool_expression&& rhs) = default;
       bool_expression& operator=(bool_expression&& rhs) = default;
 
-      constexpr const_iterator begin() const noexcept
+      AWESOME_CXX23_CONSTEXPR const_iterator begin() const noexcept
       {
         return const_iterator{fail_expression.get()};
       }
@@ -344,7 +280,7 @@ namespace AwesomeAssert
       // Must be inline, along with all code that can potentially change fail_expression's value.
       // This to ensure the compiler has the opportunity to determine that the asserted condition
       // is equal to fail_expression not being NULL.
-      constexpr explicit operator bool() const noexcept
+      AWESOME_CXX23_CONSTEXPR explicit operator bool() const noexcept
       {
         return !fail_expression;
       }
@@ -353,7 +289,7 @@ namespace AwesomeAssert
       //! Storing string converters instead of strings to prevent inlining of conversion code.
       //! Either \c NULL or terminated with a \c NULL sentinel. This removes the need for a separate
       //! size field, which would increase code size for setting up and copying that field.
-      stringifier_ptr fail_expression;
+      std::unique_ptr<stringifier> fail_expression;
     };
 
     AWESOME_EXPORT std::ostream& operator<<(std::ostream& os, const bool_expression& expr);
@@ -370,7 +306,7 @@ namespace AwesomeAssert
       friend auto create_expression_list(expression_binary&& expr)
       {
         // Constructing in reverse order because of the linked-list structure
-        stringifier_ptr str_expr(create_expression_list(std::forward<TR>(expr.rhs)));
+        auto str_expr = create_expression_list(std::forward<TR>(expr.rhs));
         str_expr = prepend(std::move(str_expr), std::forward<TO>(expr.op));
         str_expr = prepend(std::move(str_expr), std::forward<TL>(expr.lhs));
         return str_expr;
@@ -663,12 +599,12 @@ namespace AwesomeAssert
     };
   }
 
-  struct AWESOME_EXPORT violation_info
+  struct violation_info
   {
     violation_info() = default;
     violation_info(violation_info&& rhs) = default;
 
-    constexpr violation_info(
+    AWESOME_CXX23_CONSTEXPR violation_info(
         const char*                     file
       , int                             line
       , const char*                     function
@@ -690,13 +626,6 @@ namespace AwesomeAssert
     detail::bool_expression expression;
   };
 
-#ifdef _MSC_VER
-  // Apparently MSVC's C++ library doesn't properly DLL export it's std::exception hierarchy. It's warning about
-  // exporting our exception class that derives from that without exporting the base. Nothing we can do about it, so
-  // just ignore and hope for the best.
-#pragma warning(push)
-#pragma warning(disable:4275)
-#endif
   class AWESOME_EXPORT precondition_error : public std::invalid_argument
   {
   public:
@@ -707,9 +636,6 @@ namespace AwesomeAssert
   private:
     violation_info _info;
   };
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
   AWESOME_EXPORT
   std::ostream& assert_fail_default_log(
