@@ -1,7 +1,6 @@
 # AwesomeAssert
 
-[![Linux and OSX build Status](https://travis-ci.org/muggenhor/awesome-assert.svg?branch=master)](https://travis-ci.org/muggenhor/awesome-assert)
-[![Windows build status](https://ci.appveyor.com/api/projects/status/x105d24o8x8hy4li/branch/master?svg=true)](https://ci.appveyor.com/project/muggenhor/awesome-assert/branch/master)
+[![Tests](https://github.com/muggenhor/awesome-assert/actions/workflows/flake.yml/badge.svg)](https://github.com/muggenhor/awesome-assert/actions/workflows/flake.yml)
 
 An assert implementation that aims to provide usable information while maintaining as small a performance footprint as possible when _not_ failing.
 

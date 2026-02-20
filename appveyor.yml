@@ -1,9 +1,0 @@
-image: Visual Studio 2017
-
-build_script:
-  - cmd: cmake -E make_directory build
-  - cmd: cmake -E chdir build cmake -G "Visual Studio 15 2017" ..
-  - cmd: cmake --build build
-
-test_script:
-  - cmd: cmake --build build --target RUN_TESTS
