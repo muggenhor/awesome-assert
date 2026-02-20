@@ -19,7 +19,6 @@
 */
 
 #include <awesome/assert.hpp>
-#include <awesome/assert/format-helpers.hpp>
 #include <cstdlib>
 #include <iostream>
 #include <sstream>

@@ -21,8 +21,11 @@
 #include <awesome/assert.hpp>
 #include <awesome/assert/format-helpers.hpp>
 #include <cstdlib>
+#include <cstddef>
+#include <cstdio>
 #include <cstring>
 #include <iostream>
+#include <utility>
 #include <vector>
 
 #if __GLIBCXX__
