@@ -263,7 +263,7 @@ namespace AwesomeAssert
 
       explicit bool_expression() = default;
 
-      template <typename T, typename std::enable_if<is_expression<typename std::remove_cv<typename std::remove_reference<T>::type>::type>::value>::type* = nullptr>
+      template <typename T, std::enable_if_t<is_expression<std::remove_cv_t<std::remove_reference_t<T>>>::value>* = nullptr>
       explicit constexpr bool_expression(T expr)
         : fail_expression(expr ? nullptr : create_expression_list(std::move(expr)))
       {
@@ -372,11 +372,11 @@ namespace AwesomeAssert
     // CRTP helper to make the deriving class D be contextually convertible to bool if it's member T
     // D::*val is convertible to bool.
     template <typename T, typename D>
-    using optional_bool_convert_t = typename std::conditional<
+    using optional_bool_convert_t = std::conditional_t<
         std::is_constructible<bool, const T&>::value
       , contextually_convertible_bool<D>
       , empty
-      >::type;
+      >;
 
     template <typename T>
     struct expression_lhs : optional_bool_convert_t<T, expression_lhs<T>>
@@ -395,22 +395,22 @@ namespace AwesomeAssert
       template <typename R>
       void operator=(R&&) = delete;
 
-      template <class R, typename std::enable_if<!is_unary_expression<typename std::remove_cv<typename std::remove_reference<R>::type>::type>::value>::type* = nullptr>
+      template <class R, std::enable_if_t<!is_unary_expression<std::remove_cv_t<std::remove_reference_t<R>>>::value>* = nullptr>
       friend constexpr auto operator==(expression_lhs<T> lhs, R&& rhs) { return expression_binary<T, ::std::    equal_to <>, R>{std::forward<T>(lhs.val), std::forward<R>(rhs)}; }
-      template <class R, typename std::enable_if<!is_unary_expression<typename std::remove_cv<typename std::remove_reference<R>::type>::type>::value>::type* = nullptr>
+      template <class R, std::enable_if_t<!is_unary_expression<std::remove_cv_t<std::remove_reference_t<R>>>::value>* = nullptr>
       friend constexpr auto operator!=(expression_lhs<T> lhs, R&& rhs) { return expression_binary<T, ::std::not_equal_to <>, R>{std::forward<T>(lhs.val), std::forward<R>(rhs)}; }
-      template <class R, typename std::enable_if<!is_unary_expression<typename std::remove_cv<typename std::remove_reference<R>::type>::type>::value>::type* = nullptr>
+      template <class R, std::enable_if_t<!is_unary_expression<std::remove_cv_t<std::remove_reference_t<R>>>::value>* = nullptr>
       friend constexpr auto operator< (expression_lhs<T> lhs, R&& rhs) { return expression_binary<T, ::std::   less      <>, R>{std::forward<T>(lhs.val), std::forward<R>(rhs)}; }
-      template <class R, typename std::enable_if<!is_unary_expression<typename std::remove_cv<typename std::remove_reference<R>::type>::type>::value>::type* = nullptr>
+      template <class R, std::enable_if_t<!is_unary_expression<std::remove_cv_t<std::remove_reference_t<R>>>::value>* = nullptr>
       friend constexpr auto operator<=(expression_lhs<T> lhs, R&& rhs) { return expression_binary<T, ::std::   less_equal<>, R>{std::forward<T>(lhs.val), std::forward<R>(rhs)}; }
-      template <class R, typename std::enable_if<!is_unary_expression<typename std::remove_cv<typename std::remove_reference<R>::type>::type>::value>::type* = nullptr>
+      template <class R, std::enable_if_t<!is_unary_expression<std::remove_cv_t<std::remove_reference_t<R>>>::value>* = nullptr>
       friend constexpr auto operator> (expression_lhs<T> lhs, R&& rhs) { return expression_binary<T, ::std::greater      <>, R>{std::forward<T>(lhs.val), std::forward<R>(rhs)}; }
-      template <class R, typename std::enable_if<!is_unary_expression<typename std::remove_cv<typename std::remove_reference<R>::type>::type>::value>::type* = nullptr>
+      template <class R, std::enable_if_t<!is_unary_expression<std::remove_cv_t<std::remove_reference_t<R>>>::value>* = nullptr>
       friend constexpr auto operator>=(expression_lhs<T> lhs, R&& rhs) { return expression_binary<T, ::std::greater_equal<>, R>{std::forward<T>(lhs.val), std::forward<R>(rhs)}; }
-      template <class R, typename std::enable_if<!is_unary_expression<typename std::remove_cv<typename std::remove_reference<R>::type>::type>::value>::type* = nullptr>
+      template <class R, std::enable_if_t<!is_unary_expression<std::remove_cv_t<std::remove_reference_t<R>>>::value>* = nullptr>
       friend constexpr auto operator& (expression_lhs<T> lhs, R&& rhs) { return expression_binary<T, ::std::    bit_and  <>, R>{std::forward<T>(lhs.val), std::forward<R>(rhs)}; }
 
-      template <typename R, typename std::enable_if<!is_unary_expression<typename std::remove_cv<typename std::remove_reference<R>::type>::type>::value>::type* = nullptr>
+      template <typename R, std::enable_if_t<!is_unary_expression<std::remove_cv_t<std::remove_reference_t<R>>>::value>* = nullptr>
       friend constexpr auto operator&&(expression_lhs<T> lhs, R&& rhs)
       {
         static_assert(
@@ -422,7 +422,7 @@ namespace AwesomeAssert
         };
       }
 
-      template <typename R, typename std::enable_if<!is_unary_expression<typename std::remove_cv<typename std::remove_reference<R>::type>::type>::value>::type* = nullptr>
+      template <typename R, std::enable_if_t<!is_unary_expression<std::remove_cv_t<std::remove_reference_t<R>>>::value>* = nullptr>
       friend constexpr auto operator||(expression_lhs<T> lhs, R&& rhs)
       {
         static_assert(
@@ -437,14 +437,14 @@ namespace AwesomeAssert
       // Necessary to permit usage of these in expressions. They should be allowed because they
       // have higher precedence than comparison operators, but they're not without this because we
       // use left shift in expression_decomposer.
-      template <typename R, typename std::enable_if<!is_unary_expression<typename std::remove_cv<typename std::remove_reference<R>::type>::type>::value>::type* = nullptr>
+      template <typename R, std::enable_if_t<!is_unary_expression<std::remove_cv_t<std::remove_reference_t<R>>>::value>* = nullptr>
       friend constexpr auto operator<<(expression_lhs<T> lhs, R&& rhs)
         noexcept(noexcept(std::declval<T>() << std::declval<R>()))
         -> expression_lhs<decltype(std::declval<T>() << std::forward<R>(rhs))>
       {
         return std::move(lhs.val) << std::forward<R>(rhs);
       }
-      template <typename R, typename std::enable_if<!is_unary_expression<typename std::remove_cv<typename std::remove_reference<R>::type>::type>::value>::type* = nullptr>
+      template <typename R, std::enable_if_t<!is_unary_expression<std::remove_cv_t<std::remove_reference_t<R>>>::value>* = nullptr>
       friend constexpr auto operator>>(expression_lhs<T> lhs, R&& rhs)
         noexcept(noexcept(std::declval<T>() >> std::declval<R>()))
         -> expression_lhs<decltype(std::declval<T>() >> std::forward<R>(rhs))>
@@ -476,22 +476,22 @@ namespace AwesomeAssert
       template <typename R>
       void operator=(R&&) = delete;
 
-      template <class L, typename std::enable_if<!is_unary_expression<typename std::remove_cv<typename std::remove_reference<L>::type>::type>::value>::type* = nullptr>
+      template <class L, std::enable_if_t<!is_unary_expression<std::remove_cv_t<std::remove_reference_t<L>>>::value>* = nullptr>
       friend constexpr auto operator==(L&& lhs, expression_rhs<T> rhs) { return expression_binary<L, ::std::    equal_to <>, T>{std::forward<L>(lhs), std::forward<T>(rhs.val)}; }
-      template <class L, typename std::enable_if<!is_unary_expression<typename std::remove_cv<typename std::remove_reference<L>::type>::type>::value>::type* = nullptr>
+      template <class L, std::enable_if_t<!is_unary_expression<std::remove_cv_t<std::remove_reference_t<L>>>::value>* = nullptr>
       friend constexpr auto operator!=(L&& lhs, expression_rhs<T> rhs) { return expression_binary<L, ::std::not_equal_to <>, T>{std::forward<L>(lhs), std::forward<T>(rhs.val)}; }
-      template <class L, typename std::enable_if<!is_unary_expression<typename std::remove_cv<typename std::remove_reference<L>::type>::type>::value>::type* = nullptr>
+      template <class L, std::enable_if_t<!is_unary_expression<std::remove_cv_t<std::remove_reference_t<L>>>::value>* = nullptr>
       friend constexpr auto operator< (L&& lhs, expression_rhs<T> rhs) { return expression_binary<L, ::std::   less      <>, T>{std::forward<L>(lhs), std::forward<T>(rhs.val)}; }
-      template <class L, typename std::enable_if<!is_unary_expression<typename std::remove_cv<typename std::remove_reference<L>::type>::type>::value>::type* = nullptr>
+      template <class L, std::enable_if_t<!is_unary_expression<std::remove_cv_t<std::remove_reference_t<L>>>::value>* = nullptr>
       friend constexpr auto operator<=(L&& lhs, expression_rhs<T> rhs) { return expression_binary<L, ::std::   less_equal<>, T>{std::forward<L>(lhs), std::forward<T>(rhs.val)}; }
-      template <class L, typename std::enable_if<!is_unary_expression<typename std::remove_cv<typename std::remove_reference<L>::type>::type>::value>::type* = nullptr>
+      template <class L, std::enable_if_t<!is_unary_expression<std::remove_cv_t<std::remove_reference_t<L>>>::value>* = nullptr>
       friend constexpr auto operator> (L&& lhs, expression_rhs<T> rhs) { return expression_binary<L, ::std::greater      <>, T>{std::forward<L>(lhs), std::forward<T>(rhs.val)}; }
-      template <class L, typename std::enable_if<!is_unary_expression<typename std::remove_cv<typename std::remove_reference<L>::type>::type>::value>::type* = nullptr>
+      template <class L, std::enable_if_t<!is_unary_expression<std::remove_cv_t<std::remove_reference_t<L>>>::value>* = nullptr>
       friend constexpr auto operator>=(L&& lhs, expression_rhs<T> rhs) { return expression_binary<L, ::std::greater_equal<>, T>{std::forward<L>(lhs), std::forward<T>(rhs.val)}; }
-      template <class L, typename std::enable_if<!is_unary_expression<typename std::remove_cv<typename std::remove_reference<L>::type>::type>::value>::type* = nullptr>
+      template <class L, std::enable_if_t<!is_unary_expression<std::remove_cv_t<std::remove_reference_t<L>>>::value>* = nullptr>
       friend constexpr auto operator& (L&& lhs, expression_rhs<T> rhs) { return expression_binary<L, ::std::    bit_and  <>, T>{std::forward<L>(lhs), std::forward<T>(rhs.val)}; }
 
-      template <typename L, typename std::enable_if<!is_unary_expression<typename std::remove_cv<typename std::remove_reference<L>::type>::type>::value>::type* = nullptr>
+      template <typename L, std::enable_if_t<!is_unary_expression<std::remove_cv_t<std::remove_reference_t<L>>>::value>* = nullptr>
       friend constexpr auto operator&&(L&& lhs, expression_rhs<T> rhs)
         noexcept(std::is_nothrow_move_constructible<L>::value
               && std::is_nothrow_move_constructible<T>::value)
@@ -505,7 +505,7 @@ namespace AwesomeAssert
         };
       }
 
-      template <typename L, typename std::enable_if<!is_unary_expression<typename std::remove_cv<typename std::remove_reference<L>::type>::type>::value>::type* = nullptr>
+      template <typename L, std::enable_if_t<!is_unary_expression<std::remove_cv_t<std::remove_reference_t<L>>>::value>* = nullptr>
       friend constexpr auto operator||(L&& lhs, expression_rhs<T> rhs)
         noexcept(std::is_nothrow_move_constructible<L>::value
               && std::is_nothrow_move_constructible<T>::value)
@@ -532,14 +532,14 @@ namespace AwesomeAssert
       // Necessary to permit usage of these in expressions. They should be allowed because they
       // have higher precedence than comparison operators, but they're not without this because we
       // use left shift in expression_decomposer.
-      template <typename L, typename std::enable_if<!is_unary_expression<typename std::remove_cv<typename std::remove_reference<L>::type>::type>::value>::type* = nullptr>
+      template <typename L, std::enable_if_t<!is_unary_expression<std::remove_cv_t<std::remove_reference_t<L>>>::value>* = nullptr>
       friend constexpr auto operator<<(L&& lhs, expression_rhs<T> rhs)
         noexcept(noexcept(std::declval<L>() << std::declval<T>()))
         -> expression_rhs<decltype(std::forward<L>(lhs) << std::declval<T>())>
       {
         return std::forward<L>(lhs) << std::move(rhs.val);
       }
-      template <typename L, typename std::enable_if<!is_unary_expression<typename std::remove_cv<typename std::remove_reference<L>::type>::type>::value>::type* = nullptr>
+      template <typename L, std::enable_if_t<!is_unary_expression<std::remove_cv_t<std::remove_reference_t<L>>>::value>* = nullptr>
       friend constexpr auto operator>>(L&& lhs, expression_rhs<T> rhs)
         noexcept(noexcept(std::declval<L>() >> std::declval<T>()))
         -> expression_rhs<decltype(std::forward<L>(lhs) >> std::declval<T>())>
@@ -579,18 +579,18 @@ namespace AwesomeAssert
     struct expression_decomposer
     {
       template <typename T>
-      using storage_type = typename std::conditional<
-          std::is_array<typename std::remove_reference<T>::type>::value
+      using storage_type = std::conditional_t<
+          std::is_array<std::remove_reference_t<T>>::value
         , T
-        , typename std::remove_reference<T>::type
-        >::type;
+        , std::remove_reference_t<T>
+        >;
 
       template <
           typename T
-        , typename std::enable_if<!std::is_same<
-              typename std::remove_cv<typename std::remove_reference<T>::type>::type
+        , std::enable_if_t<!std::is_same<
+              std::remove_cv_t<std::remove_reference_t<T>>
             , expression_decomposer
-            >::value>::type* = nullptr>
+            >::value>* = nullptr>
       constexpr
       auto operator<<(T&& lhs) const
         noexcept(std::is_nothrow_move_constructible<T>::value)
@@ -600,10 +600,10 @@ namespace AwesomeAssert
 
       template <
           typename T
-        , typename std::enable_if<!std::is_same<
-              typename std::remove_cv<typename std::remove_reference<T>::type>::type
+        , std::enable_if_t<!std::is_same<
+              std::remove_cv_t<std::remove_reference_t<T>>
             , expression_decomposer
-            >::value>::type* = nullptr>
+            >::value>* = nullptr>
       constexpr
       friend auto operator<<(T&& rhs, const expression_decomposer& /*decomposer*/)
         noexcept(std::is_nothrow_move_constructible<T>::value)
