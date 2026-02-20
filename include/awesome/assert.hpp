@@ -363,6 +363,10 @@ namespace AwesomeAssert
       {
         return static_cast<bool>(static_cast<const D&>(*this).val);
       }
+
+    private:
+      friend D;
+      contextually_convertible_bool() = default;
     };
 
     // CRTP helper to make the deriving class D be contextually convertible to bool if it's member T
