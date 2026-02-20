@@ -269,12 +269,12 @@ namespace AwesomeAssert
       {
       }
 
-      AWESOME_CXX23_CONSTEXPR const_iterator begin() const noexcept
+      friend AWESOME_CXX23_CONSTEXPR const_iterator begin(const bool_expression& expr) noexcept
       {
-        return const_iterator{fail_expression.get()};
+        return const_iterator{expr.fail_expression.get()};
       }
 
-      constexpr const_iterator end() const noexcept
+      friend constexpr const_iterator end(const bool_expression& /*expr*/) noexcept
       {
         return const_iterator{};
       }
