@@ -126,7 +126,7 @@ namespace
     {
       // Prevent memory leak detectors from complaining about our memory (abort() prevents destructors
       // from running), by ensuring this gets destroyed as soon as we leave this scope.
-      violation_info info(std::move(in_info));
+      const violation_info info(std::move(in_info));
 
       assert_fail_default_log(info);
     }
