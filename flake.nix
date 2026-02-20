@@ -19,7 +19,7 @@
       inherit system;
     };
 
-    awesome-assert = pkgs.callPackage ({
+    awesome-assert' = {
       version ? versionOf self,
       toolchain ? [],
       cmakeFlags ? [],
@@ -51,12 +51,37 @@
 
       cmakeBuildType = "RelWithDebInfo";
       doCheck = true;
-    }) {};
+    };
 
   in {
     packages = rec {
-      inherit awesome-assert;
+      awesome-assert = pkgs.callPackage awesome-assert' {};
       default = awesome-assert;
     };
+
+    checks = let
+      # FIXME: use older Nix version to test with GCC 5 and 7 respectively
+      build-envs = {
+        clang = rec {
+          inherit pkgs;
+          stdenv = pkgs.clang12Stdenv;
+          callPackage = pkg: overrides: pkgs.callPackage pkg ({ inherit stdenv; } // overrides);
+        };
+        gcc = rec {
+          inherit pkgs;
+          stdenv = pkgs.gcc9Stdenv;
+          callPackage = pkg: overrides: pkgs.callPackage pkg ({ inherit stdenv; } // overrides);
+        };
+      };
+    in builtins.listToAttrs (
+      builtins.concatMap (name: let
+        build-env = build-envs.${name};
+      in map (cxxstd:
+      {
+        name = "cpp${cxxstd}-${name}";
+        value = build-env.callPackage awesome-assert' { cmakeFlags = [ "-DCMAKE_CXX_STANDARD=${cxxstd}" ]; };
+      }) [ "14" "17" ])
+      (builtins.attrNames build-envs)
+    );
   });
 }
