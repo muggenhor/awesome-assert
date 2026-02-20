@@ -68,7 +68,7 @@ namespace AwesomeAssert
           const char* const start = _tokens.back().str;
           const char* const op_str = op->str();
           const auto op_pos = [=] {
-            const auto str = strstr(start, op_str);
+            const char* const str = strstr(start, op_str);
             return static_cast<std::size_t>(str ? str - start : 0);
           }();
           if (!op_pos)
