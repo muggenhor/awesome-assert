@@ -235,7 +235,6 @@ namespace AwesomeAssert
 
   std::ostream& detail::operator<<(std::ostream& os, const bool_expression& expr)
   {
-    bool is_operator = false;
     bool first = true;
     for (const auto& token : expr)
     {
@@ -243,10 +242,9 @@ namespace AwesomeAssert
         os << ' ';
       else
         first = false;
-      os << (is_operator ? msg::operator_ : msg::expression);
+      os << (token.is_operator() ? msg::operator_ : msg::expression);
       if (os.good())
         os << token;
-      is_operator = !is_operator;
     }
 
     if (first)
