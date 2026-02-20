@@ -513,15 +513,15 @@ namespace AwesomeAssert
         };
       }
 
-      template <class L> friend constexpr auto operator==(expression_lhs<L> lhs, expression_rhs<T> rhs) { return expression_binary<L, ::std::    equal_to <>, T>{std::forward<L>(lhs.val), std::forward<T>(rhs.val)}; }
-      template <class L> friend constexpr auto operator!=(expression_lhs<L> lhs, expression_rhs<T> rhs) { return expression_binary<L, ::std::not_equal_to <>, T>{std::forward<L>(lhs.val), std::forward<T>(rhs.val)}; }
-      template <class L> friend constexpr auto operator< (expression_lhs<L> lhs, expression_rhs<T> rhs) { return expression_binary<L, ::std::   less      <>, T>{std::forward<L>(lhs.val), std::forward<T>(rhs.val)}; }
-      template <class L> friend constexpr auto operator<=(expression_lhs<L> lhs, expression_rhs<T> rhs) { return expression_binary<L, ::std::   less_equal<>, T>{std::forward<L>(lhs.val), std::forward<T>(rhs.val)}; }
-      template <class L> friend constexpr auto operator> (expression_lhs<L> lhs, expression_rhs<T> rhs) { return expression_binary<L, ::std::greater      <>, T>{std::forward<L>(lhs.val), std::forward<T>(rhs.val)}; }
-      template <class L> friend constexpr auto operator>=(expression_lhs<L> lhs, expression_rhs<T> rhs) { return expression_binary<L, ::std::greater_equal<>, T>{std::forward<L>(lhs.val), std::forward<T>(rhs.val)}; }
-      template <class L> friend constexpr auto operator& (expression_lhs<L> lhs, expression_rhs<T> rhs) { return expression_binary<L, ::std::    bit_and  <>, T>{std::forward<L>(lhs.val), std::forward<T>(rhs.val)}; }
-      template <class L> friend constexpr auto operator&&(expression_lhs<L> lhs, expression_rhs<T> rhs) { return expression_binary<L, ::std::logical_and  <>, T>{std::forward<L>(lhs.val), std::forward<T>(rhs.val)}; }
-      template <class L> friend constexpr auto operator||(expression_lhs<L> lhs, expression_rhs<T> rhs) { return expression_binary<L, ::std::logical_or   <>, T>{std::forward<L>(lhs.val), std::forward<T>(rhs.val)}; }
+      template <class L> friend constexpr auto operator==(expression_lhs<L> lhs, expression_rhs<T> rhs) { return expression_binary<L, ::std::    equal_to <>, T>{val_of_lhs(std::move(lhs)), std::forward<T>(rhs.val)}; }
+      template <class L> friend constexpr auto operator!=(expression_lhs<L> lhs, expression_rhs<T> rhs) { return expression_binary<L, ::std::not_equal_to <>, T>{val_of_lhs(std::move(lhs)), std::forward<T>(rhs.val)}; }
+      template <class L> friend constexpr auto operator< (expression_lhs<L> lhs, expression_rhs<T> rhs) { return expression_binary<L, ::std::   less      <>, T>{val_of_lhs(std::move(lhs)), std::forward<T>(rhs.val)}; }
+      template <class L> friend constexpr auto operator<=(expression_lhs<L> lhs, expression_rhs<T> rhs) { return expression_binary<L, ::std::   less_equal<>, T>{val_of_lhs(std::move(lhs)), std::forward<T>(rhs.val)}; }
+      template <class L> friend constexpr auto operator> (expression_lhs<L> lhs, expression_rhs<T> rhs) { return expression_binary<L, ::std::greater      <>, T>{val_of_lhs(std::move(lhs)), std::forward<T>(rhs.val)}; }
+      template <class L> friend constexpr auto operator>=(expression_lhs<L> lhs, expression_rhs<T> rhs) { return expression_binary<L, ::std::greater_equal<>, T>{val_of_lhs(std::move(lhs)), std::forward<T>(rhs.val)}; }
+      template <class L> friend constexpr auto operator& (expression_lhs<L> lhs, expression_rhs<T> rhs) { return expression_binary<L, ::std::    bit_and  <>, T>{val_of_lhs(std::move(lhs)), std::forward<T>(rhs.val)}; }
+      template <class L> friend constexpr auto operator&&(expression_lhs<L> lhs, expression_rhs<T> rhs) { return expression_binary<L, ::std::logical_and  <>, T>{val_of_lhs(std::move(lhs)), std::forward<T>(rhs.val)}; }
+      template <class L> friend constexpr auto operator||(expression_lhs<L> lhs, expression_rhs<T> rhs) { return expression_binary<L, ::std::logical_or   <>, T>{val_of_lhs(std::move(lhs)), std::forward<T>(rhs.val)}; }
 
       // Necessary to permit usage of these in expressions. They should be allowed because they
       // have higher precedence than comparison operators, but they're not without this because we
@@ -546,7 +546,7 @@ namespace AwesomeAssert
         noexcept(std::declval<L>() << std::declval<T>())
         -> expression_lhs<decltype(std::declval<L>() << std::declval<T>())>
       {
-        return std::forward<L>(lhs.val) << std::forward<T>(rhs.val);
+        return val_of_lhs(std::move(lhs)) << std::forward<T>(rhs.val);
       }
 
       template <typename L>
@@ -554,10 +554,18 @@ namespace AwesomeAssert
         noexcept(std::declval<L>() >> std::declval<T>())
         -> expression_lhs<decltype(std::declval<L>() >> std::declval<T>())>
       {
-        return std::forward<L>(lhs.val) >> std::forward<T>(rhs.val);
+        return val_of_lhs(std::move(lhs)) >> std::forward<T>(rhs.val);
       }
 
     private:
+      // Helper to get around the GCC < 13 stance for CWG 1699 (does befriending a class befriend its friends).
+      template <typename L>
+      static constexpr L val_of_lhs(expression_lhs<L>&& lhs)
+        noexcept(std::is_nothrow_move_constructible<L>::value)
+      {
+        return std::forward<L>(lhs.val);
+      }
+
       friend contextually_convertible_bool<expression_rhs<T>>;
       T val;
     };
