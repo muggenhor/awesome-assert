@@ -32,6 +32,10 @@
       stdenv,
       cmake,
       ninja,
+
+      clang-tools ? null,
+
+      lib,
     }: stdenv.mkDerivation {
       pname = "awesome-assert";
       inherit version;
@@ -41,7 +45,7 @@
       nativeBuildInputs = [
         cmake
         ninja
-      ];
+      ] ++ lib.optional (clang-tools != null) clang-tools;
 
       cmakeFlags = [
       ] ++ toolchain ++ cmakeFlags;

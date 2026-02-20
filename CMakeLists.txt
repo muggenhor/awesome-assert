@@ -22,6 +22,12 @@ cmake_minimum_required(VERSION 3.5)
 
 project(AwesomeAssert CXX)
 
+find_program(CLANG_TIDY_EXE "clang-tidy")
+message(STATUS "CLANG_TIDY_EXE=${CLANG_TIDY_EXE}")
+if(CLANG_TIDY_EXE)
+  set(CMAKE_CXX_CLANG_TIDY ${CLANG_TIDY_EXE} --config-file=${CMAKE_SOURCE_DIR}/.clang-tidy)
+endif()
+
 if(UNIX AND (
        (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     OR (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9))
@@ -34,6 +40,9 @@ if(UNIX AND (
   # both worlds: coloured output when we're running in a terminal, plain output for editors, IDEs,
   # etc.
   set(CMAKE_CXX_FLAGS "-fdiagnostics-color=always ${CMAKE_CXX_FLAGS}" CACHE STRING "" FORCE)
+  if(DEFINED CMAKE_CXX_CLANG_TIDY)
+    list(APPEND CMAKE_CXX_CLANG_TIDY --use-color=1)
+  endif()
 endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
