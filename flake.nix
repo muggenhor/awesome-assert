@@ -3,8 +3,9 @@
 {
   inputs.nixpkgs.url = "github:NixOS/nixpkgs";
   inputs.flake-utils.url = "github:numtide/flake-utils";
+  inputs.nixpkgs-old.url = "github:NixOS/nixpkgs?ref=release-24.05";
 
-  outputs = inputs@{ self, flake-utils, nixpkgs, ... }:
+  outputs = inputs@{ self, flake-utils, nixpkgs, nixpkgs-old, ... }:
   flake-utils.lib.eachDefaultSystem (system:
   let
     versionOf = flake:
@@ -16,6 +17,10 @@
       }";
 
     pkgs = import nixpkgs {
+      inherit system;
+    };
+
+    pkgs-old = import nixpkgs-old {
       inherit system;
     };
 
@@ -60,16 +65,25 @@
     };
 
     checks = let
-      # FIXME: use older Nix version to test with GCC 5 and 7 respectively
       build-envs = {
+        old-clang = rec {
+          pkgs = pkgs-old;
+          stdenv = pkgs.clang12Stdenv;
+          callPackage = pkg: overrides: pkgs.callPackage pkg ({ inherit stdenv; } // overrides);
+        };
+        old-gcc = rec {
+          pkgs = pkgs-old;
+          stdenv = pkgs.gcc7Stdenv;
+          callPackage = pkg: overrides: pkgs.callPackage pkg ({ inherit stdenv; } // overrides);
+        };
         clang = rec {
           inherit pkgs;
-          stdenv = pkgs.clang12Stdenv;
+          stdenv = pkgs.clangStdenv;
           callPackage = pkg: overrides: pkgs.callPackage pkg ({ inherit stdenv; } // overrides);
         };
         gcc = rec {
           inherit pkgs;
-          stdenv = pkgs.gcc9Stdenv;
+          stdenv = pkgs.gccStdenv;
           callPackage = pkg: overrides: pkgs.callPackage pkg ({ inherit stdenv; } // overrides);
         };
       };
