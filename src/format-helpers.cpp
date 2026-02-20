@@ -63,13 +63,14 @@ namespace AwesomeAssert
       {
         for (const auto& token : expr)
         {
-          const auto* const op = dynamic_cast<const detail::string_maker_op*>(&token);
-          if (!op)
+          if (!token.is_operator())
             continue;
+          // NOLINTNEXTLINE(*-type-static-cast-downcast): avoiding dynamic_cast which relies on RTTI, we checked validity with is_operator()
+          const auto& op = static_cast<const detail::string_maker_op&>(token);
 
           // Find the operator in the last trailing part of the expression string
           const char* const start = _tokens.back().str;
-          const char* const op_str = op->str();
+          const char* const op_str = op.str();
           const auto op_pos = [=] {
             const char* const str = strstr(start, op_str);
             return static_cast<std::size_t>(str ? str - start : 0);

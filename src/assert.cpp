@@ -85,6 +85,11 @@ namespace detail
   {
     return os << this->str();
   }
+
+  bool string_maker_op::is_operator() const
+  {
+    return true;
+  }
 }
 
 namespace

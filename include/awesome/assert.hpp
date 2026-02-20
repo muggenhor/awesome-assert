@@ -72,6 +72,8 @@ namespace AwesomeAssert
     virtual ~stringifier() noexcept;
     virtual std::ostream& convert(std::ostream& os) const = 0;
 
+    virtual bool is_operator() const = 0;
+
   protected:
     stringifier() = default;
     stringifier(stringifier&&) = default;
@@ -103,6 +105,13 @@ namespace AwesomeAssert
     std::ostream& convert(std::ostream& os) const override
     {
       return os << val;
+    }
+
+    // Helper that indicates a static_cast<string_maker_op*> is allowed.
+    // The purpose of this is to implement a poor-man's dynamic_cast on platforms with RTTI disabled.
+    bool is_operator() const override
+    {
+      return false;
     }
 
   private:
@@ -137,6 +146,7 @@ namespace AwesomeAssert
     struct AWESOME_EXPORT string_maker_op : stringifier
     {
       std::ostream& convert(std::ostream& os) const override;
+      bool is_operator() const override;
       virtual const char* str() const noexcept = 0;
     };
   }
