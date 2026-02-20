@@ -112,9 +112,9 @@ namespace AwesomeAssert
 #if _XOPEN_VERSION >= 700 || _POSIX_VERSION >= 200112L
 #if __GLIBCXX__
     // Support for glibc++: query the actual file-descriptor, can work for other things than stdout/stderr too
-    if (__gnu_cxx::stdio_sync_filebuf<char>* rdbuf = dynamic_cast<__gnu_cxx::stdio_sync_filebuf<char>*>(os.rdbuf()))
+    if (auto* rdbuf = dynamic_cast<__gnu_cxx::stdio_sync_filebuf<char>*>(os.rdbuf()))
     {
-      if (auto file = rdbuf->file())
+      if (FILE* file = rdbuf->file())
         return fileno(file);
     }
 #elif _LIBCPP_VERSION
