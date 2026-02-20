@@ -13,9 +13,14 @@ jobs:
     steps:
     - uses: actions/checkout@v5
 
+    - name: "Get locked nixpkgs version"
+      id: flake_lock_nixpkgs
+      run: jq -r '.nodes.nixpkgs | "url=https://github.com/" + .original.owner + "/" + .original.repo + "/archive/" + .locked.rev + ".tar.gz"' flake.lock >> $GITHUB_OUTPUT
+
     - uses: cachix/install-nix-action@v31
       with:
         github_access_token: ${{ secrets.GITHUB_TOKEN }}
+        nix_path: "nixpkgs=${{ steps.flake_lock_nixpkgs.outputs.url }}"
 
     - run: nix build --show-trace --print-build-logs
     - run: nix flake check --show-trace --print-build-logs
