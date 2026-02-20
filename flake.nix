@@ -96,6 +96,23 @@
         value = build-env.callPackage awesome-assert' { cmakeFlags = [ "-DCMAKE_CXX_STANDARD=${cxxstd}" ]; };
       }) [ "14" "17" ])
       (builtins.attrNames build-envs)
-    );
+    ) // {
+      cppcheck = pkgs.runCommand "cppcheck.log" rec {
+        cppcheck = pkgs.lib.getExe' pkgs.cppcheck "cppcheck";
+        pkg = (pkgs.callPackage awesome-assert' {}).out;
+        inherit (pkg) src;
+      } ''
+        "$cppcheck" --template="{file}:{line}: {severity} ({id}): {message}" \
+          --enable=style --force --std=c++14 -j 8 \
+          -U__FUNCSIG__ -U_MSC_VER \
+          -U__GNUC__ -U__clang__ -U__GLIBCXX__ -U_LIBCPP_VERSION \
+          -I"$pkg/include" \
+          "$src/src" 2> "$out"
+        if [ -s "$out" ]; then
+          cat "$out" >&2
+          exit 1
+        fi
+      '';
+    };
   });
 }
