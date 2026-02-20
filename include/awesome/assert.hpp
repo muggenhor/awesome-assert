@@ -72,6 +72,11 @@ namespace AwesomeAssert
     virtual ~stringifier() noexcept;
     virtual std::ostream& convert(std::ostream& os) const = 0;
 
+  protected:
+    stringifier() = default;
+    stringifier(stringifier&&) = default;
+    stringifier& operator=(stringifier&&) = default;
+
   private:
     friend struct detail::bool_expression;
     // Must be inline to ensure the compiler has the full body available for constant propagation
@@ -263,9 +268,6 @@ namespace AwesomeAssert
         : fail_expression(expr ? nullptr : create_expression_list(std::move(expr)))
       {
       }
-
-      bool_expression(bool_expression&& rhs) = default;
-      bool_expression& operator=(bool_expression&& rhs) = default;
 
       AWESOME_CXX23_CONSTEXPR const_iterator begin() const noexcept
       {
@@ -610,7 +612,6 @@ namespace AwesomeAssert
   struct violation_info
   {
     violation_info() = default;
-    violation_info(violation_info&& rhs) = default;
 
     AWESOME_CXX23_CONSTEXPR violation_info(
         const char*                     file

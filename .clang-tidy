@@ -21,5 +21,7 @@ CheckOptions:
  - { key: readability-braces-around-statements.ShortStatementLines, value: 3 }
  - { key: readability-implicit-bool-conversion.AllowPointerConditions, value: true }
  - { key: readability-implicit-bool-conversion.AllowIntegerConditions, value: true }
+ - { key: cppcoreguidelines-special-member-functions.AllowImplicitlyDeletedCopyOrMove, value: true }
+ - { key: cppcoreguidelines-special-member-functions.AllowMissingMoveFunctionsWhenCopyIsDeleted, value: true }
 
 HeaderFilterRegex: '.*/(src/.*|include/.*)[.]hpp'

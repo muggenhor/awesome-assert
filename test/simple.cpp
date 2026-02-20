@@ -36,6 +36,7 @@ struct move_only_t
 
   move_only_t(move_only_t&&) = default;
   move_only_t& operator=(move_only_t&&) = default;
+  ~move_only_t() = default;
 
   // modifying operators are purposefully by-value to force the params to be r-values.
   friend constexpr move_only_t operator<<(move_only_t lhs, move_only_t rhs) noexcept
