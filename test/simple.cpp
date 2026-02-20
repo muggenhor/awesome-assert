@@ -74,7 +74,7 @@ constexpr move_only_t<std::remove_cv_t<std::remove_reference_t<T>>> move_only(T&
   return std::forward<T>(val);
 }
 
-int main(int argc, char**)
+int main(int argc, char** /*argv*/)
 {
   // Compile-test only
   AWESOME_EXPECTS(true);

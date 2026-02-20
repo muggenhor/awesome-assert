@@ -601,7 +601,7 @@ namespace AwesomeAssert
             , expression_decomposer
             >::value>::type* = nullptr>
       constexpr
-      friend auto operator<<(T&& rhs, const expression_decomposer&)
+      friend auto operator<<(T&& rhs, const expression_decomposer& /*decomposer*/)
         noexcept(std::is_nothrow_move_constructible<T>::value)
       {
         return expression_rhs<storage_type<T>>(std::forward<T>(rhs));
@@ -613,6 +613,7 @@ namespace AwesomeAssert
   {
     violation_info() = default;
 
+    // NOLINTBEGIN(*-easily-swappable-parameters)
     AWESOME_CXX23_CONSTEXPR violation_info(
         const char*                     file
       , int                             line
@@ -627,6 +628,7 @@ namespace AwesomeAssert
       , expression{std::move(expr)}
     {
     }
+    // NOLINTEND(*-easily-swappable-parameters)
 
     int                     line_number   = -1;
     const char*             file_name     = nullptr;
@@ -692,6 +694,7 @@ namespace AwesomeAssert
     ) AWESOME_POSTCONDITION_NOEXCEPT;
 }
 
+// NOLINTBEGIN(*-macro-usage,*-macro-parentheses)
 #if defined(__GNUC__)
 # define AWESOME_UNLIKELY(x) __builtin_expect(x, 0)
 #else
@@ -740,5 +743,6 @@ namespace AwesomeAssert
 #define AWESOME_EXPECTS(expr) AWESOME_ASSERT_PROXY(::AwesomeAssert::assert_failed_precondition , expr)
 #define AWESOME_ASSERT(expr)  AWESOME_ASSERT_PROXY(::AwesomeAssert::assert_failed_invariant    , expr)
 #define AWESOME_ENSURES(expr) AWESOME_ASSERT_PROXY(::AwesomeAssert::assert_failed_postcondition, expr)
+// NOLINTEND(*-macro-usage,*-macro-parentheses)
 
 #endif // INCLUDED_AWESOME_ASSERT_HPP

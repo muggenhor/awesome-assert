@@ -80,8 +80,10 @@ namespace AwesomeAssert
           const auto orig_size = std::exchange(_tokens.back().len, op_pos);
 
           const auto op_len = strlen(op_str);
+          // NOLINTBEGIN(*-pointer-arithmetic)
           _tokens.push_back({msg::operator_, start + op_pos, op_len});
           _tokens.push_back({msg::expression, start + op_pos + op_len, orig_size - op_pos - op_len});
+          // NOLINTEND(*-pointer-arithmetic)
         }
       }
 
@@ -142,6 +144,7 @@ namespace AwesomeAssert
         return false;
 
       // non-empty content of NO_COLOR env var should disable color
+      // NOLINTNEXTLINE(*-pointer-arithmetic)
       return envvar[0] != '\0';
     }();
 
@@ -173,7 +176,7 @@ namespace AwesomeAssert
     if (handle == invalid_native_handle)
       return false;
 
-    return ::isatty(handle);
+    return ::isatty(handle) != 0;
   }
 
   namespace
