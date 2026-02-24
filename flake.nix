@@ -3,9 +3,8 @@
 {
   inputs.nixpkgs.url = "github:NixOS/nixpkgs";
   inputs.flake-utils.url = "github:numtide/flake-utils";
-  inputs.nixpkgs-old.url = "github:NixOS/nixpkgs?ref=release-24.05";
 
-  outputs = inputs@{ self, flake-utils, nixpkgs, nixpkgs-old, ... }:
+  outputs = inputs@{ self, flake-utils, nixpkgs, ... }:
   flake-utils.lib.eachDefaultSystem (system:
   let
     versionOf = flake:
@@ -17,10 +16,6 @@
       }";
 
     pkgs = import nixpkgs {
-      inherit system;
-    };
-
-    pkgs-old = import nixpkgs-old {
       inherit system;
     };
 
@@ -70,16 +65,6 @@
 
     checks = let
       build-envs = {
-        old-clang = rec {
-          pkgs = pkgs-old;
-          stdenv = pkgs.clang12Stdenv;
-          callPackage = pkg: overrides: pkgs.callPackage pkg ({ inherit stdenv; } // overrides);
-        };
-        old-gcc = rec {
-          pkgs = pkgs-old;
-          stdenv = pkgs.gcc7Stdenv;
-          callPackage = pkg: overrides: pkgs.callPackage pkg ({ inherit stdenv; } // overrides);
-        };
         clang = rec {
           inherit pkgs;
           stdenv = pkgs.clangStdenv;
@@ -98,7 +83,7 @@
       {
         name = "cpp${cxxstd}-${name}";
         value = build-env.callPackage awesome-assert' { cmakeFlags = [ "-DCMAKE_CXX_STANDARD=${cxxstd}" ]; };
-      }) [ "14" "17" ])
+      }) [ "17" ])
       (builtins.attrNames build-envs)
     ) // {
       cppcheck = pkgs.runCommand "cppcheck.log" rec {
@@ -107,7 +92,7 @@
         inherit (pkg) src;
       } ''
         "$cppcheck" --template="{file}:{line}: {severity} ({id}): {message}" \
-          --enable=style --force --std=c++14 -j 8 \
+          --enable=style --force --std=c++17 -j 8 \
           -U__FUNCSIG__ -U_MSC_VER \
           -U__GNUC__ -U__clang__ -U__GLIBCXX__ -U_LIBCPP_VERSION \
           -I"$pkg/include" \

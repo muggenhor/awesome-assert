@@ -72,21 +72,7 @@ target_sources(${PROJECT_NAME}_static
       include/awesome/assert/format-helpers.hpp
 )
 
-target_compile_features(${PROJECT_NAME}_static PUBLIC
-  cxx_constexpr
-  cxx_explicit_conversions
-  cxx_extern_templates
-  cxx_func_identifier
-  cxx_noexcept
-  cxx_nullptr
-  cxx_override
-  cxx_range_for
-  cxx_relaxed_constexpr
-  cxx_rvalue_references
-  cxx_static_assert
-  cxx_strong_enums
-  cxx_trailing_return_types
-)
+target_compile_features(${PROJECT_NAME}_static PUBLIC cxx_std_17)
 add_library(${PROJECT_NAME} SHARED
   $<TARGET_PROPERTY:${PROJECT_NAME}_static,SOURCES>
 )
