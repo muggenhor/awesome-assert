@@ -14,6 +14,8 @@ Checks:
   - -readability-function-cognitive-complexity
   - -*-avoid-const-or-ref-data-members
   - -*-rvalue-reference-param-not-moved
+  - -*-use-constraints # C++20
+  - -*-use-designated-initializers # C++20
 
 FormatStyle: file
 
