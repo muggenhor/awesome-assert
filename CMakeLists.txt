@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2016-2018 Giel van Schijndel
+# Copyright (C) 2016-2026 Giel van Schijndel
 #
 # This file is part of AwesomeAssert.
 #
@@ -18,7 +18,7 @@
 # If not, see <http://www.gnu.org/licenses/>.
 #
 
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.29)
 
 project(AwesomeAssert CXX)
 
@@ -54,25 +54,24 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   )
 endif()
 
-set(PUBLIC_HEADER_TOP_DIR include/awesome)
-set(PUBLIC_HEADER_DIR ${PUBLIC_HEADER_TOP_DIR}/assert)
-set(PUBLIC_HEADERS_TOP
-  ${PUBLIC_HEADER_TOP_DIR}/assert.hpp
-)
-set(PUBLIC_HEADERS
-  ${PUBLIC_HEADER_DIR}/format-helpers.hpp
+add_library(${PROJECT_NAME}_static STATIC)
+
+target_sources(${PROJECT_NAME}_static
+  PRIVATE
+    src/assert.cpp
+    src/format-helpers.cpp
 )
 
-add_library(${PROJECT_NAME}_static STATIC
-  src/assert.cpp
-  src/format-helpers.cpp
-  ${PUBLIC_HEADERS_TOP}
-  ${PUBLIC_HEADERS}
+target_sources(${PROJECT_NAME}_static
+  PUBLIC
+    FILE_SET HEADERS
+    TYPE HEADERS
+    BASE_DIRS include
+    FILES
+      include/awesome/assert.hpp
+      include/awesome/assert/format-helpers.hpp
 )
-target_include_directories(${PROJECT_NAME}_static PUBLIC
-  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>
-)
+
 target_compile_features(${PROJECT_NAME}_static PUBLIC
   cxx_constexpr
   cxx_explicit_conversions
@@ -107,16 +106,20 @@ set_target_properties(
 
 include(GenerateExportHeader)
 
-set(EXPORT_FILE_NAME ${PROJECT_BINARY_DIR}/${PUBLIC_HEADER_TOP_DIR}/awesome_export.h)
-list(APPEND PUBLIC_HEADERS_TOP ${EXPORT_FILE_NAME})
+set(EXPORT_FILE_NAME ${PROJECT_BINARY_DIR}/include/awesome/export.h)
 generate_export_header(${PROJECT_NAME}
   BASE_NAME Awesome
   EXPORT_FILE_NAME ${EXPORT_FILE_NAME}
 )
 
 # Make generated export header available for the target and its dependendees
-target_include_directories(${PROJECT_NAME}_static PUBLIC
-  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/${PUBLIC_HEADER_TOP_DIR}>
+target_sources(${PROJECT_NAME}_static
+  PUBLIC
+    FILE_SET generated_headers
+    TYPE HEADERS
+    BASE_DIRS ${PROJECT_BINARY_DIR}/include
+    FILES
+      ${EXPORT_FILE_NAME}
 )
 target_compile_definitions(${PROJECT_NAME}_static PUBLIC AWESOME_STATIC_DEFINE)
 
@@ -125,22 +128,13 @@ if(NOT DEFINED CMAKE_INSTALL_ARCHIVEDIR)
   set(CMAKE_INSTALL_ARCHIVEDIR "${CMAKE_INSTALL_LIBDIR}")
 endif()
 
-cmake_path(RELATIVE_PATH PUBLIC_HEADER_TOP_DIR BASE_DIRECTORY include)
-cmake_path(RELATIVE_PATH PUBLIC_HEADER_DIR BASE_DIRECTORY include)
-
 install(TARGETS
   ${PROJECT_NAME} ${PROJECT_NAME}_static
   EXPORT ${PROJECT_NAME}
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_ARCHIVEDIR}
-)
-install(FILES
-  ${PUBLIC_HEADERS_TOP}
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PUBLIC_HEADER_TOP_DIR}
-)
-install(FILES
-  ${PUBLIC_HEADERS}
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PUBLIC_HEADER_DIR}
+  FILE_SET HEADERS
+  FILE_SET generated_headers
 )
 install(EXPORT ${PROJECT_NAME}
   DESTINATION ${CMAKE_INSTALL_ARCHIVEDIR}/cmake

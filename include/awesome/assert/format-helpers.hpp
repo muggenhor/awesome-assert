@@ -21,7 +21,8 @@
 #ifndef INCLUDED_AWESOME_ASSERT_FORMAT_HELPERS_HPP
 #define INCLUDED_AWESOME_ASSERT_FORMAT_HELPERS_HPP
 
-#include "awesome_export.h"
+#include <awesome/export.h>
+
 #include <ostream>
 
 namespace AwesomeAssert

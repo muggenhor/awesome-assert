@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2016-2018 Giel van Schijndel
+ *  Copyright (C) 2016-2026 Giel van Schijndel
  *
  *  This file is part of AwesomeAssert.
  *
@@ -21,7 +21,8 @@
 #ifndef INCLUDED_AWESOME_ASSERT_HPP
 #define INCLUDED_AWESOME_ASSERT_HPP
 
-#include "awesome_export.h"
+#include <awesome/export.h>
+
 #include <functional>
 #include <iosfwd>
 #include <iterator>
