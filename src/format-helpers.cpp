@@ -50,15 +50,14 @@ namespace AwesomeAssert
     {
     struct token_t
     {
-      msg         msg_type  = msg::expression;
-      const char* str       = nullptr;
-      std::size_t len       = 0;
+      msg               msg_type  = msg::expression;
+      std::string_view  str;
     };
 
     public:
-      expression_colorizer(const char* const expr_str, const detail::bool_expression& expr)
+      expression_colorizer(std::string_view expr_str, const detail::bool_expression& expr)
       : _tokens{
-          {msg::expression, expr_str, std::strlen(expr_str)},
+          {msg::expression, expr_str},
         }
       {
         for (const auto& token : expr)
@@ -69,21 +68,17 @@ namespace AwesomeAssert
           const auto& op = static_cast<const detail::string_maker_op&>(token);
 
           // Find the operator in the last trailing part of the expression string
-          const char* const start = _tokens.back().str;
-          const char* const op_str = op.str();
-          const auto op_pos = [=] {
-            const char* const str = strstr(start, op_str);
-            return static_cast<std::size_t>(str ? str - start : 0);
-          }();
-          if (!op_pos)
+          auto& start = _tokens.back().str;
+          const auto op_str = op.str();
+          const auto op_pos = start.find(op_str);
+          if (op_pos == std::string_view::npos)
             continue;
 
-          const auto orig_size = std::exchange(_tokens.back().len, op_pos);
+          auto tail = std::exchange(start, start.substr(0, op_pos)).substr(op_pos);
 
-          const auto op_len = strlen(op_str);
           // NOLINTBEGIN(*-pointer-arithmetic)
-          _tokens.push_back({msg::operator_, start + op_pos, op_len});
-          _tokens.push_back({msg::expression, start + op_pos + op_len, orig_size - op_pos - op_len});
+          _tokens.push_back({msg::operator_, tail.substr(0, op_str.size())});
+          _tokens.push_back({msg::expression, tail.substr(op_str.size())});
           // NOLINTEND(*-pointer-arithmetic)
         }
       }
@@ -95,7 +90,7 @@ namespace AwesomeAssert
           if (!os.good()) return os;
           os << token.msg_type;
           if (!os.good()) return os;
-          os.write(token.str, static_cast<std::ptrdiff_t>(token.len));
+          os.write(token.str.data(), static_cast<std::ptrdiff_t>(token.str.size()));
         }
 
         if (!os.good()) return os;

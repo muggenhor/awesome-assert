@@ -69,15 +69,17 @@ template struct string_maker<const char*>;
 template struct string_maker<const signed char*>;
 template struct string_maker<const unsigned char*>;
 
-const char* string_maker<::std::    equal_to <>>::str() const noexcept { return "=="; }
-const char* string_maker<::std::not_equal_to <>>::str() const noexcept { return "!="; }
-const char* string_maker<::std::   less      <>>::str() const noexcept { return "<" ; }
-const char* string_maker<::std::   less_equal<>>::str() const noexcept { return "<="; }
-const char* string_maker<::std::greater      <>>::str() const noexcept { return ">" ; }
-const char* string_maker<::std::greater_equal<>>::str() const noexcept { return ">="; }
-const char* string_maker<::std::    bit_and  <>>::str() const noexcept { return "&" ; }
-const char* string_maker<::std::logical_and  <>>::str() const noexcept { return "&&"; }
-const char* string_maker<::std::logical_or   <>>::str() const noexcept { return "||"; }
+using namespace std::literals::string_view_literals;
+
+std::string_view string_maker<::std::    equal_to <>>::str() const noexcept { return "=="sv; }
+std::string_view string_maker<::std::not_equal_to <>>::str() const noexcept { return "!="sv; }
+std::string_view string_maker<::std::   less      <>>::str() const noexcept { return  "<"sv; }
+std::string_view string_maker<::std::   less_equal<>>::str() const noexcept { return "<="sv; }
+std::string_view string_maker<::std::greater      <>>::str() const noexcept { return  ">"sv; }
+std::string_view string_maker<::std::greater_equal<>>::str() const noexcept { return ">="sv; }
+std::string_view string_maker<::std::    bit_and  <>>::str() const noexcept { return  "&"sv; }
+std::string_view string_maker<::std::logical_and  <>>::str() const noexcept { return "&&"sv; }
+std::string_view string_maker<::std::logical_or   <>>::str() const noexcept { return "||"sv; }
 
 namespace detail
 {

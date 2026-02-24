@@ -28,6 +28,7 @@
 #include <iterator>
 #include <memory>
 #include <stdexcept>
+#include <string_view>
 
 #if __cplusplus >= 202302L
   #define AWESOME_CXX23_CONSTEXPR constexpr
@@ -148,19 +149,19 @@ namespace AwesomeAssert
     {
       std::ostream& convert(std::ostream& os) const override;
       [[nodiscard]] bool is_operator() const override;
-      [[nodiscard]] virtual const char* str() const noexcept = 0;
+      [[nodiscard]] virtual std::string_view str() const noexcept = 0;
     };
   }
 
-  template <> struct AWESOME_EXPORT string_maker<::std::    equal_to <>> : detail::string_maker_op { [[nodiscard]] const char* str() const noexcept override; };
-  template <> struct AWESOME_EXPORT string_maker<::std::not_equal_to <>> : detail::string_maker_op { [[nodiscard]] const char* str() const noexcept override; };
-  template <> struct AWESOME_EXPORT string_maker<::std::   less      <>> : detail::string_maker_op { [[nodiscard]] const char* str() const noexcept override; };
-  template <> struct AWESOME_EXPORT string_maker<::std::   less_equal<>> : detail::string_maker_op { [[nodiscard]] const char* str() const noexcept override; };
-  template <> struct AWESOME_EXPORT string_maker<::std::greater      <>> : detail::string_maker_op { [[nodiscard]] const char* str() const noexcept override; };
-  template <> struct AWESOME_EXPORT string_maker<::std::greater_equal<>> : detail::string_maker_op { [[nodiscard]] const char* str() const noexcept override; };
-  template <> struct AWESOME_EXPORT string_maker<::std::    bit_and  <>> : detail::string_maker_op { [[nodiscard]] const char* str() const noexcept override; };
-  template <> struct AWESOME_EXPORT string_maker<::std::logical_and  <>> : detail::string_maker_op { [[nodiscard]] const char* str() const noexcept override; };
-  template <> struct AWESOME_EXPORT string_maker<::std::logical_or   <>> : detail::string_maker_op { [[nodiscard]] const char* str() const noexcept override; };
+  template <> struct AWESOME_EXPORT string_maker<::std::    equal_to <>> : detail::string_maker_op { [[nodiscard]] std::string_view str() const noexcept override; };
+  template <> struct AWESOME_EXPORT string_maker<::std::not_equal_to <>> : detail::string_maker_op { [[nodiscard]] std::string_view str() const noexcept override; };
+  template <> struct AWESOME_EXPORT string_maker<::std::   less      <>> : detail::string_maker_op { [[nodiscard]] std::string_view str() const noexcept override; };
+  template <> struct AWESOME_EXPORT string_maker<::std::   less_equal<>> : detail::string_maker_op { [[nodiscard]] std::string_view str() const noexcept override; };
+  template <> struct AWESOME_EXPORT string_maker<::std::greater      <>> : detail::string_maker_op { [[nodiscard]] std::string_view str() const noexcept override; };
+  template <> struct AWESOME_EXPORT string_maker<::std::greater_equal<>> : detail::string_maker_op { [[nodiscard]] std::string_view str() const noexcept override; };
+  template <> struct AWESOME_EXPORT string_maker<::std::    bit_and  <>> : detail::string_maker_op { [[nodiscard]] std::string_view str() const noexcept override; };
+  template <> struct AWESOME_EXPORT string_maker<::std::logical_and  <>> : detail::string_maker_op { [[nodiscard]] std::string_view str() const noexcept override; };
+  template <> struct AWESOME_EXPORT string_maker<::std::logical_or   <>> : detail::string_maker_op { [[nodiscard]] std::string_view str() const noexcept override; };
 
   namespace detail
   {
