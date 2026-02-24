@@ -30,6 +30,12 @@
 #include <stdexcept>
 #include <string_view>
 
+#if __cplusplus >= 202002L
+  #define AWESOME_CXX20_CONSTEXPR constexpr
+#else
+  #define AWESOME_CXX20_CONSTEXPR inline
+#endif
+
 #if __cplusplus >= 202302L
   #define AWESOME_CXX23_CONSTEXPR constexpr
 #else
@@ -111,7 +117,7 @@ namespace AwesomeAssert
 
     // Helper that indicates a static_cast<string_maker_op*> is allowed.
     // The purpose of this is to implement a poor-man's dynamic_cast on platforms with RTTI disabled.
-    [[nodiscard]] bool is_operator() const override
+    [[nodiscard]] AWESOME_CXX20_CONSTEXPR bool is_operator() const override
     {
       return false;
     }

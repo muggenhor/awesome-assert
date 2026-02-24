@@ -81,9 +81,14 @@
         build-env = build-envs.${name};
       in map (cxxstd:
       {
-        name = "cpp${cxxstd}-${name}";
-        value = build-env.callPackage awesome-assert' { cmakeFlags = [ "-DCMAKE_CXX_STANDARD=${cxxstd}" ]; };
-      }) [ "17" ])
+        name = "cpp${toString cxxstd}-${name}";
+        value = build-env.callPackage awesome-assert' {
+          cmakeFlags = [ "-DCMAKE_CXX_STANDARD=${toString cxxstd}" ] ++
+            # Because clang-tidy can't handle GCC's C++20 module parameters that CMake automatically adds
+            pkgs.lib.optional (cxxstd >= 20 && build-env.stdenv.cc.isGNU) "-DCLANG_TIDY_EXE=NO"
+          ;
+        };
+      }) [ 17 20 ])
       (builtins.attrNames build-envs)
     ) // {
       cppcheck = pkgs.runCommand "cppcheck.log" rec {
