@@ -1,19 +1,19 @@
-Checks: "-*,\
-  boost-*,\
-  bugprone-*,\
-  clang-analyzer-*,\
-  cppcoreguidelines-*,\
-  modernize-*,\
-  performance-*,\
-  readability-*,\
-  -modernize-use-trailing-return-type,\
-  -performance-enum-size,\
-  -*-magic-numbers,\
-  -readability-identifier-length,\
-  -readability-function-cognitive-complexity,\
-  -*-avoid-const-or-ref-data-members,\
-  -*-rvalue-reference-param-not-moved,\
-"
+Checks:
+  - -*
+  - boost-*
+  - bugprone-*
+  - clang-analyzer-*
+  - cppcoreguidelines-*
+  - modernize-*
+  - performance-*
+  - readability-*
+  - -modernize-use-trailing-return-type
+  - -performance-enum-size
+  - -*-magic-numbers
+  - -readability-identifier-length
+  - -readability-function-cognitive-complexity
+  - -*-avoid-const-or-ref-data-members
+  - -*-rvalue-reference-param-not-moved
 
 FormatStyle: file
 
