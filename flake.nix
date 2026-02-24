@@ -88,7 +88,7 @@
             pkgs.lib.optional (cxxstd >= 20 && build-env.stdenv.cc.isGNU) "-DCLANG_TIDY_EXE=NO"
           ;
         };
-      }) [ 17 20 ])
+      }) [ 17 20 23 ])
       (builtins.attrNames build-envs)
     ) // {
       cppcheck = pkgs.runCommand "cppcheck.log" rec {

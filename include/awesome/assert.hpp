@@ -39,7 +39,7 @@
 #if __cplusplus >= 202302L
   #define AWESOME_CXX23_CONSTEXPR constexpr
 #else
-  #define AWESOME_CXX23_CONSTEXPR
+  #define AWESOME_CXX23_CONSTEXPR inline
 #endif
 
 #ifndef AWESOME_PRECONDITION_NO_NOEXCEPT
@@ -70,7 +70,7 @@ namespace AwesomeAssert
   namespace detail
   {
     template <typename T>
-    std::unique_ptr<stringifier> prepend(std::unique_ptr<stringifier> tail, T&& obj);
+    AWESOME_CXX23_CONSTEXPR std::unique_ptr<stringifier> prepend(std::unique_ptr<stringifier> tail, T&& obj);
 
     struct bool_expression;
   }
@@ -91,7 +91,7 @@ namespace AwesomeAssert
     friend struct detail::bool_expression;
     // Must be inline to ensure the compiler has the full body available for constant propagation
     template <typename T>
-    friend std::unique_ptr<stringifier> detail::prepend(std::unique_ptr<stringifier> tail, T&& obj);
+    AWESOME_CXX23_CONSTEXPR friend std::unique_ptr<stringifier> detail::prepend(std::unique_ptr<stringifier> tail, T&& obj);
 
     std::unique_ptr<stringifier> next;
   };
@@ -178,18 +178,18 @@ namespace AwesomeAssert
     }
 
     // Overloads that *don't* forward their parameter to the string_maker constructor.
-    inline std::unique_ptr<stringifier> create_expression_list(::std::    equal_to <> val) { return std::make_unique<string_maker<decltype(val)>>(); }
-    inline std::unique_ptr<stringifier> create_expression_list(::std::not_equal_to <> val) { return std::make_unique<string_maker<decltype(val)>>(); }
-    inline std::unique_ptr<stringifier> create_expression_list(::std::   less      <> val) { return std::make_unique<string_maker<decltype(val)>>(); }
-    inline std::unique_ptr<stringifier> create_expression_list(::std::   less_equal<> val) { return std::make_unique<string_maker<decltype(val)>>(); }
-    inline std::unique_ptr<stringifier> create_expression_list(::std::greater      <> val) { return std::make_unique<string_maker<decltype(val)>>(); }
-    inline std::unique_ptr<stringifier> create_expression_list(::std::greater_equal<> val) { return std::make_unique<string_maker<decltype(val)>>(); }
-    inline std::unique_ptr<stringifier> create_expression_list(::std::    bit_and  <> val) { return std::make_unique<string_maker<decltype(val)>>(); }
-    inline std::unique_ptr<stringifier> create_expression_list(::std::logical_and  <> val) { return std::make_unique<string_maker<decltype(val)>>(); }
-    inline std::unique_ptr<stringifier> create_expression_list(::std::logical_or   <> val) { return std::make_unique<string_maker<decltype(val)>>(); }
+    AWESOME_CXX23_CONSTEXPR std::unique_ptr<stringifier> create_expression_list(::std::    equal_to <> val) { return std::make_unique<string_maker<decltype(val)>>(); }
+    AWESOME_CXX23_CONSTEXPR std::unique_ptr<stringifier> create_expression_list(::std::not_equal_to <> val) { return std::make_unique<string_maker<decltype(val)>>(); }
+    AWESOME_CXX23_CONSTEXPR std::unique_ptr<stringifier> create_expression_list(::std::   less      <> val) { return std::make_unique<string_maker<decltype(val)>>(); }
+    AWESOME_CXX23_CONSTEXPR std::unique_ptr<stringifier> create_expression_list(::std::   less_equal<> val) { return std::make_unique<string_maker<decltype(val)>>(); }
+    AWESOME_CXX23_CONSTEXPR std::unique_ptr<stringifier> create_expression_list(::std::greater      <> val) { return std::make_unique<string_maker<decltype(val)>>(); }
+    AWESOME_CXX23_CONSTEXPR std::unique_ptr<stringifier> create_expression_list(::std::greater_equal<> val) { return std::make_unique<string_maker<decltype(val)>>(); }
+    AWESOME_CXX23_CONSTEXPR std::unique_ptr<stringifier> create_expression_list(::std::    bit_and  <> val) { return std::make_unique<string_maker<decltype(val)>>(); }
+    AWESOME_CXX23_CONSTEXPR std::unique_ptr<stringifier> create_expression_list(::std::logical_and  <> val) { return std::make_unique<string_maker<decltype(val)>>(); }
+    AWESOME_CXX23_CONSTEXPR std::unique_ptr<stringifier> create_expression_list(::std::logical_or   <> val) { return std::make_unique<string_maker<decltype(val)>>(); }
 
     template <typename T>
-    std::unique_ptr<stringifier> prepend(std::unique_ptr<stringifier> tail, T&& obj)
+    AWESOME_CXX23_CONSTEXPR std::unique_ptr<stringifier> prepend(std::unique_ptr<stringifier> tail, T&& obj)
     {
       auto head = create_expression_list(std::forward<T>(obj));
 
@@ -323,7 +323,7 @@ namespace AwesomeAssert
         return op(lhs, rhs);
       }
 
-      friend auto create_expression_list(expression_binary&& expr)
+      friend AWESOME_CXX23_CONSTEXPR auto create_expression_list(expression_binary&& expr)
       {
         // Constructing in reverse order because of the linked-list structure
         auto str_expr = create_expression_list(std::forward<TR>(expr.rhs));
@@ -404,7 +404,7 @@ namespace AwesomeAssert
         : val(std::forward<T>(lhs_))
       {}
 
-      friend auto create_expression_list(expression_lhs lhs)
+      friend AWESOME_CXX23_CONSTEXPR auto create_expression_list(expression_lhs lhs)
       {
         return create_expression_list(std::forward<T>(lhs.val));
       }
@@ -485,7 +485,7 @@ namespace AwesomeAssert
         : val(std::forward<T>(rhs_))
       {}
 
-      friend auto create_expression_list(expression_rhs rhs)
+      friend AWESOME_CXX23_CONSTEXPR auto create_expression_list(expression_rhs rhs)
       {
         return create_expression_list(std::forward<T>(rhs.val));
       }
