@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2016 Giel van Schijndel
+ *  Copyright (C) 2016-2026 Giel van Schijndel
  *
  *  This file is part of AwesomeAssert.
  *
@@ -29,7 +29,7 @@ struct move_only_t
 {
   move_only_t() = delete;
 
-  constexpr move_only_t(T v) noexcept(std::is_nothrow_move_constructible<T>::value)
+  constexpr move_only_t(T v) noexcept(std::is_nothrow_move_constructible_v<T>)
     : val{std::move(v)}
   {
   }
@@ -69,7 +69,7 @@ struct move_only_t
 
 template <typename T>
 constexpr move_only_t<std::remove_cv_t<std::remove_reference_t<T>>> move_only(T&& val)
-  noexcept(std::is_nothrow_move_constructible<T>::value)
+  noexcept(std::is_nothrow_move_constructible_v<T>)
 {
   return std::forward<T>(val);
 }
